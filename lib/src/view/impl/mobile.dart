@@ -69,6 +69,10 @@ class CrossView extends StatefulWidget implements view_interface.CrossView {
   @override
   final void Function(String src)? onPageFinished;
 
+
+
+
+
   /// Callback to decide whether to allow navigation to the incoming url
   @override
   final NavigationDelegate? navigationDelegate;
@@ -160,6 +164,10 @@ class _CrossViewState extends State<CrossView> {
 
     originalWebViewController
       ..setUserAgent(widget.userAgent)
+      ..setOnConsoleMessage((message) {
+        print(message.message);
+      })
+      ..setNavigationDelegate(_createNavigationDelegate())
       ..setJavaScriptMode(widget.javascriptMode);
 
     crossViewController = _createCrossViewController()
@@ -170,72 +178,58 @@ class _CrossViewState extends State<CrossView> {
 
     _handleChange();
 
+  }
 
-    void onWebResourceError(WebResourceError err) =>
-        widget.onWebResourceError!(
+
+  wf.NavigationDelegate _createNavigationDelegate() {
+    return wf.NavigationDelegate(
+      onProgress: (int progress) {
+        print("progress $progress");
+      },
+      onPageStarted: (String url) => widget.onPageStarted?.call(url),
+      onPageFinished: (String url) => widget.onPageFinished?.call(url),
+      onWebResourceError: (wf.WebResourceError err) {
+        return widget.onWebResourceError!(
           WebResourceError(
             description: err.description,
             errorCode: err.errorCode,
-            domain: err.domain,
-            errorType: WebResourceErrorType.values.singleWhere(
-                  (value) => value.toString() == err.errorType.toString(),
-            ),
-            failingUrl: err.failingUrl,
+            domain: err.url,
+            errorType: WebResourceErrorType.values.singleWhere((value) => value.toString() == err.errorType.toString()),
+            failingUrl: err.url,
           ),
         );
+      },
+      onNavigationRequest: (wf.NavigationRequest request) async {
 
-    FutureOr<wf.NavigationDecision> navigationDelegate(wf.NavigationRequest request,) async {
-      if (widget.navigationDelegate == null) {
-        crossViewController.value = crossViewController.value.copyWith(source: request.url);
-        return wf.NavigationDecision.navigate;
-      }
-
-      final delegate = await widget.navigationDelegate!.call(
-        NavigationRequest(
-          content: NavigationContent(
-              request.url, crossViewController.value.sourceType),
-          isMainFrame: request.isMainFrame,
-        ),
-      );
-
-      switch (delegate) {
-        case NavigationDecision.navigate:
-        // When clicking on an URL, the sourceType stays the same.
-        // That's because you cannot move from URL to HTML just by clicking.
-        // Also we don't take URL_BYPASS into consideration because it has no effect here in mobile
-          crossViewController.value = crossViewController.value.copyWith(
-            source: request.url,
-          );
+        if (widget.navigationDelegate == null) {
+          crossViewController.value = crossViewController.value.copyWith(source: request.url);
           return wf.NavigationDecision.navigate;
+        }
+
+        final delegate = await widget.navigationDelegate?.call(NavigationRequest(
+          content: NavigationContent(request.url, crossViewController.value.sourceType),
+          isMainFrame: request.isMainFrame,
+        ));
+
+        switch (delegate!) {
+          case NavigationDecision.navigate:
+          // When clicking on an URL, the sourceType stays the same.
+          // That's because you cannot move from URL to HTML just by clicking.
+          // Also we don't take URL_BYPASS into consideration because it has no effect here in mobile
+            crossViewController.value = crossViewController.value.copyWith(source: request.url);
+            return wf.NavigationDecision.navigate;
         case NavigationDecision.prevent:
           return wf.NavigationDecision.prevent;
+        //   default:
+        //     return wf.NavigationDecision.prevent;
+        }
+
+
       }
-    }
+    );
 
-
-    // final javascriptChannels = widget.dartCallBacks
-    //     .map(
-    //       (cb) => wf.JavascriptChannel(
-    //     name: cb.name,
-    //     onMessageReceived: (msg) => cb.callBack(msg.message),
-    //   ),
-    // )
-    //     .toSet();
   }
 
-
-  String? _initialContent() {
-
-    if (widget.initialSourceType == SourceType.html) {
-      return HtmlUtils.preprocessSource(
-        widget.initialContent,
-        jsContent: widget.jsContent,
-        encodeHtml: true,
-      );
-    }
-
-    return widget.initialContent;
-  }
 
   CrossViewController _createCrossViewController() {
     return CrossViewController(
