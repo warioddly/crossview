@@ -1,10 +1,12 @@
 import 'dart:async' show Future;
 // ignore: avoid_web_libraries_in_flutter
 import 'dart:js' as js;
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:crossview/src/utils/logger.dart';
+import 'package:crossview/src/utils/source_type.dart';
 import 'package:crossview/src/utils/utils.dart';
 import 'package:crossview/src/utils/web_history.dart';
 
@@ -80,27 +82,28 @@ class CrossViewController extends ChangeNotifier implements i.CrossViewControlle
   Future<void> loadContent(
     String content,
     SourceType sourceType, {
-    Map<String, String>? headers,
-    Object? body,
+    Map<String, String> headers = const {},
+    Uint8List? body,
     bool fromAssets = false,
   }) async {
     CrossViewContent newContent;
 
     if (fromAssets) {
+
       final contentFromAssets = await rootBundle.loadString(content);
 
       newContent = CrossViewContent(
         source: contentFromAssets,
         sourceType: sourceType,
         headers: headers,
-        webPostRequestBody: body,
+        body: body,
       );
     } else {
       newContent = CrossViewContent(
         source: content,
         sourceType: sourceType,
         headers: headers,
-        webPostRequestBody: body,
+        body: body,
       );
     }
 

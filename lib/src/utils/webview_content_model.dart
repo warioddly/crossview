@@ -3,7 +3,7 @@ import 'package:crossview/src/utils/source_type.dart';
 
 /// Model class for webview's content
 ///
-/// This is the result of calling [await crossviewController.getContent()]
+/// This is the result of calling [await crossViewController.getContent()]
 class CrossViewContent {
   /// Source
   final String source;
@@ -12,7 +12,7 @@ class CrossViewContent {
   final SourceType sourceType;
 
   /// Headers
-  final Map<String, String>? headers;
+  final Map<String, String> headers;
 
   /// POST request body, on WEB only
   final Uint8List? body;
@@ -21,7 +21,7 @@ class CrossViewContent {
   const CrossViewContent({
     required this.source,
     required this.sourceType,
-    this.headers,
+    this.headers = const { },
     this.body,
   });
 
@@ -29,7 +29,7 @@ class CrossViewContent {
     String? source,
     SourceType? sourceType,
     Map<String, String>? headers,
-    Object? body,
+    Uint8List? body,
   }) =>
       CrossViewContent(
         source: source ?? this.source,
@@ -43,7 +43,7 @@ class CrossViewContent {
     return 'CrossViewContent:\n'
         'Source: $source\n'
         'SourceType: ${describeEnum(sourceType)}\n'
-        'Last request Headers: ${headers ?? 'none'}\n'
+        'Last request Headers: ${headers.isEmpty ? 'none' : headers}\n'
         'Last request Body: ${body ?? 'none'}\n';
   }
 

@@ -1,7 +1,7 @@
 import 'dart:async' show Future;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show rootBundle;
+import 'package:flutter/services.dart' show Uint8List, rootBundle;
 import 'package:webview_flutter/webview_flutter.dart' as wf;
 import 'package:crossview/src/utils/html_utils.dart';
 import 'package:crossview/src/utils/source_type.dart';
@@ -10,7 +10,8 @@ import 'package:crossview/src/utils/utils.dart';
 import 'package:crossview/src/controller/interface.dart' as i;
 
 /// Mobile implementation
-class CrossViewController extends ChangeNotifier implements i.CrossViewController<wf.WebViewController> {
+class CrossViewController extends ChangeNotifier
+    implements i.CrossViewController<wf.WebViewController> {
   /// Webview controller connector
   @override
   late wf.WebViewController connector;
@@ -72,17 +73,18 @@ class CrossViewController extends ChangeNotifier implements i.CrossViewControlle
   ///
   @override
   Future<void> loadContent(
-    String content,
-    SourceType sourceType, {
-    Map<String, String>? headers,
-    Object? body, // NO-OP HERE
-    bool fromAssets = false,
+      String content,
+      SourceType sourceType, {
+      Map<String, String> headers = const {},
+      Uint8List? body,
+      bool fromAssets = false,
   }) async {
     if (fromAssets) {
-      final _content = await rootBundle.loadString(content);
+
+      final contentFromAssets = await rootBundle.loadString(content);
 
       value = CrossViewContent(
-        source: _content,
+        source: contentFromAssets,
         sourceType: sourceType,
         headers: headers,
       );
@@ -205,9 +207,7 @@ class CrossViewController extends ChangeNotifier implements i.CrossViewControlle
   /// Get scroll position on X axis
   @override
   Future<int> getScrollX() async {
-
     Offset offset = await connector.getScrollPosition();
-
     return offset.dx.toInt();
   }
 
@@ -215,7 +215,6 @@ class CrossViewController extends ChangeNotifier implements i.CrossViewControlle
   @override
   Future<int> getScrollY() async {
     Offset offset = await connector.getScrollPosition();
-
     return offset.dy.toInt();
   }
 

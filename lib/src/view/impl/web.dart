@@ -15,6 +15,8 @@ import 'package:crossview/src/utils/utils.dart';
 import 'package:crossview/src/controller/impl/web.dart';
 import 'package:crossview/src/controller/interface.dart' as ctrl_interface;
 import 'package:crossview/src/view/interface.dart' as view_interface;
+import 'package:webview_flutter/webview_flutter.dart' as wf;
+
 
 /// Web implementation
 class CrossView extends StatefulWidget implements view_interface.CrossView {
@@ -35,18 +37,11 @@ class CrossView extends StatefulWidget implements view_interface.CrossView {
   @override
   final String? userAgent;
 
-  /// Widget width
-  @override
-  final double width;
-
-  /// Widget height
-  @override
-  final double height;
-
-  /// Callback which returns a referrence to the [crossViewController]
+  /// Callback which returns a referrence to the [CrossViewController]
   /// being created.
   @override
-  final Function(ctrl_interface.CrossViewController controller)? onWebViewCreated;
+  final Function(ctrl_interface.CrossViewController controller)?
+      onWebViewCreated;
 
   /// A set of [EmbeddedJsContent].
   ///
@@ -74,12 +69,7 @@ class CrossView extends StatefulWidget implements view_interface.CrossView {
 
   /// Boolean value to specify if Javascript execution should be allowed inside the webview
   @override
-  final JavascriptMode javascriptMode;
-
-  /// This defines if media content(audio - video) should
-  /// auto play when entering the page.
-  @override
-  final AutoMediaPlaybackPolicy initialMediaPlaybackPolicy;
+  final wf.JavaScriptMode javascriptMode;
 
   /// Callback for when the page starts loading.
   @override
@@ -115,15 +105,11 @@ class CrossView extends StatefulWidget implements view_interface.CrossView {
     this.initialContent = 'about:blank',
     this.initialSourceType = SourceType.url,
     this.userAgent,
-    required this.width,
-    required this.height,
     this.onWebViewCreated,
     this.jsContent = const {},
     this.dartCallBacks = const {},
     this.ignoreAllGestures = false,
-    this.javascriptMode = JavascriptMode.unrestricted,
-    this.initialMediaPlaybackPolicy =
-        AutoMediaPlaybackPolicy.requireUserActionForAllMediaTypes,
+    this.javascriptMode = wf.JavaScriptMode.unrestricted,
     this.onPageStarted,
     this.onPageFinished,
     this.navigationDelegate,
@@ -300,8 +286,8 @@ class _CrossViewState extends State<CrossView> {
   @override
   Widget build(BuildContext context) {
     final htmlElementView = SizedBox(
-      width: widget.width,
-      height: widget.height,
+      height: MediaQuery.of(context).size.height,
+      width: MediaQuery.of(context).size.width,
       child: AbsorbPointer(
         child: RepaintBoundary(
           child: HtmlElementView(
@@ -347,31 +333,27 @@ class _CrossViewState extends State<CrossView> {
       ..id = 'id_$iframeViewType'
       ..name = 'name_$iframeViewType'
       ..style.border = 'none'
-      ..width = widget.width.toInt().toString()
-      ..height = widget.height.toInt().toString()
+      ..width = "100%"
+      ..height = "100%"
       ..allowFullscreen = widget.webSpecificParams.webAllowFullscreenContent;
 
     widget.webSpecificParams.additionalSandboxOptions.forEach(
       iframeElement.sandbox!.add,
     );
 
-    if (widget.javascriptMode == JavascriptMode.unrestricted) {
+    if (widget.javascriptMode == wf.JavaScriptMode.unrestricted) {
       iframeElement.sandbox!.add('allow-scripts');
     }
 
     final allow = widget.webSpecificParams.additionalAllowOptions;
 
-    if (widget.initialMediaPlaybackPolicy ==
-        AutoMediaPlaybackPolicy.alwaysAllow) {
-      allow.add('autoplay');
-    }
 
     iframeElement.allow = allow.reduce((curr, next) => '$curr; $next');
 
     return iframeElement;
   }
 
-  // Called when crossViewController updates it's value
+  // Called when CrossViewController updates it's value
   void _handleChange() {
     final model = crossViewController.value;
     final source = model.source;
@@ -380,7 +362,7 @@ class _CrossViewState extends State<CrossView> {
     _updateSource(model);
   }
 
-  // Called when crossViewController updates it's ignoreAllGesturesNotifier value
+  // Called when CrossViewController updates it's ignoreAllGesturesNotifier value
   void _handleIgnoreGesturesChange() {
     setState(() {
       _ignoreAllGestures = crossViewController.ignoresAllGestures;
@@ -398,7 +380,7 @@ class _CrossViewState extends State<CrossView> {
     final decision = await widget.navigationDelegate!(
       NavigationRequest(
         content: NavigationContent(pageSource, sourceType),
-        isForMainFrame: true,
+        isMainFrame: true,
       ),
     );
 
@@ -423,6 +405,7 @@ class _CrossViewState extends State<CrossView> {
           forWeb: true,
         );
         break;
+      case SourceType.assets:
       case SourceType.url:
       case SourceType.urlBypass:
         if (source == 'about:blank') {
@@ -474,32 +457,22 @@ class _CrossViewState extends State<CrossView> {
     }
 
     final method = dartObj['method'] as String;
-    final body = dartObj['body'];
+    final body = dartObj['body'] as Uint8List?;
 
-    final bodyMap = body == null
-        ? null
-        : (<String, String>{}..addEntries(
-            (body as List<dynamic>).map(
-              (e) => MapEntry<String, String>(
-                e[0].toString(),
-                e[1].toString(),
-              ),
-            ),
-          ));
 
     _tryFetchRemoteSource(
       method: method,
       url: href,
       headers: crossViewController.value.headers,
-      body: bodyMap,
+      body: body,
     );
   }
 
   void _tryFetchRemoteSource({
     required String method,
     required String url,
-    Map<String, String>? headers,
-    Object? body,
+    required Map<String, String> headers,
+    Uint8List? body,
   }) {
     _fetchPageSourceBypass(
       method: method,
@@ -513,7 +486,7 @@ class _CrossViewState extends State<CrossView> {
         source: url,
         sourceType: SourceType.urlBypass,
         headers: headers,
-        webPostRequestBody: body,
+        body: body,
       ));
 
       _debugLog('Got a new history entry: $url\n');

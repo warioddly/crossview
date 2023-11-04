@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:crossview/src/utils/source_type.dart';
 import 'package:crossview/src/utils/webview_content_model.dart';
 
@@ -39,11 +41,11 @@ abstract class CrossViewController<T> {
   /// `body` is only used on the WEB version, when clicking on a submit button in a form
   ///
   Future<void> loadContent(
-    String content,
-    SourceType sourceType, {
-    Map<String, String>? headers,
-    Object? body,
-    bool fromAssets = false,
+      String content,
+      SourceType sourceType, {
+      Map<String, String> headers = const { },
+      Uint8List? body,
+      bool fromAssets = false,
   });
 
   /// This function allows you to call Javascript functions defined inside the webview.

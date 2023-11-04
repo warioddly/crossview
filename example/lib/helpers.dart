@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 
 /// This dialog will basically show up right on top of the webview.
 ///
-/// AlertDialog is a widget, so it needs to be wrapped in `WebViewAware`, in order
+/// AlertDialog is a widget, so it needs to be wrapped in `CrossViewAware`, in order
 /// to be able to interact (on web) with it.
 ///
 /// Read the `Readme.md` for more info.

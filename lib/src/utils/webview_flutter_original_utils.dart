@@ -8,29 +8,6 @@ typedef NavigationDelegate = FutureOr<NavigationDecision> Function(
   NavigationRequest navigation,
 );
 
-/// Describes the state of JavaScript support in a given web view.
-enum JavascriptMode {
-  /// JavaScript execution is disabled.
-  disabled,
-
-  /// JavaScript execution is not restricted.
-  unrestricted,
-}
-
-/// Describes the state of automatic media playback
-enum AutoMediaPlaybackPolicy {
-  /// Starting any kind of media playback requires a user action.
-  ///
-  /// For example: JavaScript code cannot start playing media unless the code was executed
-  /// as a result of a user action (like a touch event).
-  requireUserActionForAllMediaTypes,
-
-  /// Starting any kind of media playback is always allowed.
-  ///
-  /// For example: JavaScript code that's triggered when the page is loaded can start playing
-  /// video or audio.
-  alwaysAllow,
-}
 
 /// A decision on how to handle a navigation request.
 enum NavigationDecision {
@@ -48,7 +25,7 @@ class NavigationRequest {
   /// Constructor
   const NavigationRequest({
     required this.content,
-    required this.isForMainFrame,
+    required this.isMainFrame,
   });
 
   /// The URL that will be loaded if the navigation is executed.
@@ -56,11 +33,11 @@ class NavigationRequest {
   final NavigationContent content;
 
   /// Whether the navigation request is to be loaded as the main frame.
-  final bool isForMainFrame;
+  final bool isMainFrame;
 
   @override
   String toString() {
-    return 'NavigationRequest(content: $content, isForMainFrame: $isForMainFrame)';
+    return 'NavigationRequest(content: $content, isForMainFrame: $isMainFrame)';
   }
 }
 

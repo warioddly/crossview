@@ -1,11 +1,7 @@
 import 'dart:async';
 import 'dart:io';
-
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:crossview/src/utils/utils.dart';
-
-import 'package:webview_flutter_platform_interface/webview_flutter_platform_interface.dart' as ww;
 import 'package:webview_flutter/webview_flutter.dart' as wf;
 
 import 'package:crossview/src/view/interface.dart' as view_interface;
@@ -31,18 +27,11 @@ class CrossView extends StatefulWidget implements view_interface.CrossView {
   @override
   final String? userAgent;
 
-  /// Widget width
-  @override
-  final double width;
 
-  /// Widget height
-  @override
-  final double height;
-
-  /// Callback which returns a referrence to the [crossViewController]
+  /// Callback which returns a referrence to the [CrossViewController]
   /// being created.
   @override
-  final Function(ctrl_interface.crossViewController controller)? onWebViewCreated;
+  final Function(ctrl_interface.CrossViewController controller)? onWebViewCreated;
 
   /// A set of [EmbeddedJsContent].
   ///
@@ -70,12 +59,7 @@ class CrossView extends StatefulWidget implements view_interface.CrossView {
 
   /// Boolean value to specify if Javascript execution should be allowed inside the webview
   @override
-  final JavascriptMode javascriptMode;
-
-  /// This defines if media content(audio - video) should
-  /// auto play when entering the page.
-  @override
-  final AutoMediaPlaybackPolicy initialMediaPlaybackPolicy;
+  final wf.JavaScriptMode javascriptMode;
 
   /// Callback for when the page starts loading.
   @override
@@ -111,14 +95,11 @@ class CrossView extends StatefulWidget implements view_interface.CrossView {
     this.initialContent = 'about:blank',
     this.initialSourceType = SourceType.url,
     this.userAgent,
-    required this.width,
-    required this.height,
     this.onWebViewCreated,
     this.jsContent = const {},
     this.dartCallBacks = const {},
     this.ignoreAllGestures = false,
-    this.javascriptMode = JavascriptMode.unrestricted,
-    this.initialMediaPlaybackPolicy = AutoMediaPlaybackPolicy.requireUserActionForAllMediaTypes,
+    this.javascriptMode = wf.JavaScriptMode.unrestricted,
     this.onPageStarted,
     this.onPageFinished,
     this.navigationDelegate,
@@ -133,7 +114,8 @@ class CrossView extends StatefulWidget implements view_interface.CrossView {
 
 class _CrossViewState extends State<CrossView> {
 
-  final wf.WebViewController originalWebViewController = wf.WebViewController();
+
+  late wf.WebViewController originalWebViewController = wf.WebViewController();
   late CrossViewController crossViewController;
 
   late bool _ignoreAllGestures;
@@ -142,23 +124,54 @@ class _CrossViewState extends State<CrossView> {
   void initState() {
     super.initState();
 
+    _ignoreAllGestures = widget.ignoreAllGestures;
+
+    _init();
+
     if (Platform.isAndroid && widget.mobileSpecificParams.androidEnableHybridComposition) {
-      // wf.WebViewWidget.fromPlatform(platform: wf.PlatformWebViewWidgetCreationParams(
-      //
-      // ));
-      // );
+      // wf.WebView.platform = wf.SurfaceAndroidWebView();
     }
 
-    _ignoreAllGestures = widget.ignoreAllGestures;
-    crossViewController = _createCrossViewController();
+
   }
+
 
   @override
   Widget build(BuildContext context) {
+    return Center(
+      child: SizedBox(
+        height: MediaQuery.of(context).size.width,
+        width: MediaQuery.of(context).size.width,
+        child: IgnorePointer(
+          ignoring: _ignoreAllGestures,
+          child: wf.WebViewWidget(
+            key: widget.key,
+            controller: originalWebViewController,
+            // initialUrl: _initialContent(),
+            // javascriptMode: javascriptMode,
+            // onWebViewCreated: onWebViewCreated,
+            // javascriptChannels: javascriptChannels,
+            gestureRecognizers: widget.mobileSpecificParams.mobileGestureRecognizers ?? {},
+            // initialMediaPlaybackPolicy: initialMediaPlaybackPolicy,
+            // onWebResourceError: onWebResourceError,
+            // gestureNavigationEnabled: widget.mobileSpecificParams.gestureNavigationEnabled,
+            // debuggingEnabled: widget.mobileSpecificParams.debuggingEnabled,
+            // navigationDelegate: navigationDelegate,
+            // userAgent: widget.userAgent,
+          ),
+        ),
+      ),
+    );
+  }
 
-    final javaScriptMode = widget.javascriptMode == JavascriptMode.unrestricted
-        ? wf.JavaScriptMode.unrestricted
-        : wf.JavaScriptMode.disabled;
+
+  void _init() {
+
+    crossViewController = _createCrossViewController();
+
+    originalWebViewController
+      ..setUserAgent(widget.userAgent)
+      ..setJavaScriptMode(widget.javascriptMode);
 
 
     void onWebResourceError(WebResourceError err) =>
@@ -168,33 +181,31 @@ class _CrossViewState extends State<CrossView> {
             errorCode: err.errorCode,
             domain: err.domain,
             errorType: WebResourceErrorType.values.singleWhere(
-              (value) => value.toString() == err.errorType.toString(),
+                  (value) => value.toString() == err.errorType.toString(),
             ),
             failingUrl: err.failingUrl,
           ),
         );
 
-    FutureOr<wf.NavigationDecision> navigationDelegate(
-      wf.NavigationRequest request,
-    ) async {
+    FutureOr<wf.NavigationDecision> navigationDelegate(wf.NavigationRequest request,) async {
       if (widget.navigationDelegate == null) {
-        crossViewController.value =
-            crossViewController.value.copyWith(source: request.url);
+        crossViewController.value = crossViewController.value.copyWith(source: request.url);
         return wf.NavigationDecision.navigate;
       }
 
       final delegate = await widget.navigationDelegate!.call(
         NavigationRequest(
-          content: NavigationContent(request.url, crossViewController.value.sourceType),
-          isForMainFrame: request.isMainFrame,
+          content: NavigationContent(
+              request.url, crossViewController.value.sourceType),
+          isMainFrame: request.isMainFrame,
         ),
       );
 
       switch (delegate) {
         case NavigationDecision.navigate:
-          // When clicking on an URL, the sourceType stays the same.
-          // That's because you cannot move from URL to HTML just by clicking.
-          // Also we don't take URL_BYPASS into consideration because it has no effect here in mobile
+        // When clicking on an URL, the sourceType stays the same.
+        // That's because you cannot move from URL to HTML just by clicking.
+        // Also we don't take URL_BYPASS into consideration because it has no effect here in mobile
           crossViewController.value = crossViewController.value.copyWith(
             source: request.url,
           );
@@ -205,52 +216,28 @@ class _CrossViewState extends State<CrossView> {
     }
 
     void onWebViewCreated(wf.WebViewController webViewController) {
+      originalWebViewController = webViewController;
+
       crossViewController.connector = originalWebViewController;
+      // Calls onWebViewCreated to pass the refference upstream
       if (widget.onWebViewCreated != null) {
         widget.onWebViewCreated!(crossViewController);
       }
-    }
 
+    }
 
     onWebViewCreated(originalWebViewController);
 
     // final javascriptChannels = widget.dartCallBacks
     //     .map(
-    //       (cb) => wf.JavaScriptChannel(
-    //         name: cb.name,
-    //         onMessageReceived: (msg) => cb.callBack(msg.message),
-    //       ),
-    //     )
+    //       (cb) => wf.JavascriptChannel(
+    //     name: cb.name,
+    //     onMessageReceived: (msg) => cb.callBack(msg.message),
+    //   ),
+    // )
     //     .toSet();
-
-
-    return SizedBox(
-      width: widget.width,
-      height: widget.height,
-      child: IgnorePointer(
-        ignoring: _ignoreAllGestures,
-        child: wf.WebViewWidget(
-          key: widget.key,
-          controller: originalWebViewController,
-          // initialUrl: _initialContent(),
-          // javascriptMode: javascriptMode,
-          // onWebViewCreated: onWebViewCreated,
-          // javascriptChannels: javascriptChannels,
-          // gestureRecognizers:
-          //     widget.mobileSpecificParams.mobileGestureRecognizers,
-          // onPageStarted: widget.onPageStarted,
-          // onPageFinished: widget.onPageFinished,
-          // initialMediaPlaybackPolicy: initialMediaPlaybackPolicy,
-          // onWebResourceError: onWebResourceError,
-          // gestureNavigationEnabled:
-          //     widget.mobileSpecificParams.gestureNavigationEnabled,
-          // debuggingEnabled: widget.mobileSpecificParams.debuggingEnabled,
-          // navigationDelegate: navigationDelegate,
-          // userAgent: widget.userAgent,
-        ),
-      ),
-    );
   }
+
 
   // Returns initial data
   String? _initialContent() {
@@ -264,9 +251,9 @@ class _CrossViewState extends State<CrossView> {
     return widget.initialContent;
   }
 
-  // Creates a crossViewController and adds the listener
+  // Creates a CrossViewController and adds the listener
   CrossViewController _createCrossViewController() {
-    return crossViewController(
+    return CrossViewController(
         initialContent: widget.initialContent,
         initialSourceType: widget.initialSourceType,
         ignoreAllGestures: _ignoreAllGestures,
@@ -274,52 +261,47 @@ class _CrossViewState extends State<CrossView> {
       ..addListener(_handleChange)
       ..addIgnoreGesturesListener(_handleIgnoreGesturesChange);
   }
+  
 
-  // Prepares the source depending if it is HTML or URL
-  String _prepareContent(CrossViewContent content) {
-    if (content.sourceType == SourceType.html) {
-      return HtmlUtils.preprocessSource(
-        content.source,
-        jsContent: widget.jsContent,
-        // Needed for mobile webview in order to URI-encode the HTML
-        encodeHtml: true,
-      );
-    }
-    return content.source;
-  }
-
-  // Called when crossViewController updates it's value
+  // Called when CrossViewController updates it's value
   void _handleChange() {
     
-    final source = crossViewController.value;
+    final data = crossViewController.value;
 
-    if (source.sourceType == SourceType.url) {
-      originalWebViewController.loadRequest(
-        Uri.parse(source.source),
-        headers: source.headers ?? {},
-        body: source.webPostRequestBody
-      );
-      return;
-    }
-    
-    if (source.sourceType == SourceType.url) {
-      originalWebViewController.loadFlutterAsset(source.source);
-      return;
-    }
-    
-    if (source.sourceType == SourceType.html) {
-      originalWebViewController.loadHtmlString(source.source);
-      return;
+    switch (data.sourceType) {
+      case SourceType.html:
+        originalWebViewController.loadHtmlString(HtmlUtils.preprocessSource(
+            data.source,
+            jsContent: widget.jsContent,
+            encodeHtml: true,
+          ));
+        break;
+      case SourceType.url:
+        originalWebViewController.loadRequest(
+          Uri.parse(data.source),
+          headers: data.headers,
+          body: data.body
+        );
+        break;
+      case SourceType.assets:
+        originalWebViewController.loadFlutterAsset(data.source);
+        break;
+      default:
+        originalWebViewController.loadHtmlString(data.source);
+        break;
     }
 
-    
+    // originalWebViewController.loadUrl(
+    //   _prepareContent(data),
+    //   headers: data.headers,
+    // );
+
+
   }
 
-  // Called when the ValueNotifier inside crossViewController updates it's value
+  // Called when the ValueNotifier inside CrossViewController updates it's value
   void _handleIgnoreGesturesChange() {
-    setState(() {
-      _ignoreAllGestures = crossViewController.ignoresAllGestures;
-    });
+    setState(() => _ignoreAllGestures = crossViewController.ignoresAllGestures);
   }
 
   @override

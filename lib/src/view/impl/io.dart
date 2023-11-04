@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:crossview/src/utils/utils.dart';
 
@@ -6,6 +5,7 @@ import 'package:crossview/src/view/interface.dart' as view_interface;
 import 'package:crossview/src/controller/interface.dart' as ctrl_interface;
 
 import 'package:crossview/src/view/impl/mobile.dart' as mobile;
+import 'package:webview_flutter/webview_flutter.dart' as wf;
 
 /// IO implementation
 ///
@@ -28,15 +28,7 @@ class CrossView extends StatelessWidget implements view_interface.CrossView {
   @override
   final String? userAgent;
 
-  /// Widget width
-  @override
-  final double width;
-
-  /// Widget height
-  @override
-  final double height;
-
-  /// Callback which returns a referrence to the [crossviewController]
+  /// Callback which returns a referrence to the [CrossViewController]
   /// being created.
   @override
   final Function(ctrl_interface.CrossViewController controller)? onWebViewCreated;
@@ -67,12 +59,8 @@ class CrossView extends StatelessWidget implements view_interface.CrossView {
 
   /// Boolean value to specify if Javascript execution should be allowed inside the webview
   @override
-  final JavascriptMode javascriptMode;
+  final wf.JavaScriptMode javascriptMode;
 
-  /// This defines if media content(audio - video) should
-  /// auto play when entering the page.
-  @override
-  final AutoMediaPlaybackPolicy initialMediaPlaybackPolicy;
 
   /// Callback for when the page starts loading.
   @override
@@ -108,15 +96,11 @@ class CrossView extends StatelessWidget implements view_interface.CrossView {
     this.initialContent = 'about:blank',
     this.initialSourceType = SourceType.url,
     this.userAgent,
-    required this.width,
-    required this.height,
     this.onWebViewCreated,
     this.jsContent = const {},
     this.dartCallBacks = const {},
     this.ignoreAllGestures = false,
-    this.javascriptMode = JavascriptMode.unrestricted,
-    this.initialMediaPlaybackPolicy =
-        AutoMediaPlaybackPolicy.requireUserActionForAllMediaTypes,
+    this.javascriptMode = wf.JavaScriptMode.unrestricted,
     this.onPageStarted,
     this.onPageFinished,
     this.navigationDelegate,
@@ -132,14 +116,11 @@ class CrossView extends StatelessWidget implements view_interface.CrossView {
       initialContent: initialContent,
       initialSourceType: initialSourceType,
       userAgent: userAgent,
-      width: width,
-      height: height,
       dartCallBacks: dartCallBacks,
       jsContent: jsContent,
       onWebViewCreated: onWebViewCreated,
       ignoreAllGestures: ignoreAllGestures,
       javascriptMode: javascriptMode,
-      initialMediaPlaybackPolicy: initialMediaPlaybackPolicy,
       onPageStarted: onPageStarted,
       onPageFinished: onPageFinished,
       navigationDelegate: navigationDelegate,

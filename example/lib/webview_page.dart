@@ -44,21 +44,11 @@ class _WebViewXPageState extends State<WebViewXPage> {
           padding: const EdgeInsets.all(10.0),
           child: Column(
             children: <Widget>[
-              buildSpace(direction: Axis.vertical, amount: 10.0, flex: false),
-              Container(
-                padding: const EdgeInsets.only(bottom: 20.0),
-                child: Text(
-                  'Play around with the buttons below',
-                  style: Theme.of(context).textTheme.headline6,
-                ),
-              ),
-              buildSpace(direction: Axis.vertical, amount: 10.0, flex: false),
-              Container(
-                decoration: BoxDecoration(
-                  border: Border.all(width: 0.2),
-                ),
+
+              Expanded(
                 child: _buildWebViewX(),
               ),
+
               Expanded(
                 child: Scrollbar(
                   isAlwaysShown: true,
@@ -70,6 +60,8 @@ class _WebViewXPageState extends State<WebViewXPage> {
                   ),
                 ),
               ),
+
+
             ],
           ),
         ),
@@ -79,12 +71,15 @@ class _WebViewXPageState extends State<WebViewXPage> {
 
   Widget _buildWebViewX() {
     return CrossView(
-      key: const ValueKey('webviewx'),
+      key: const ValueKey('crossview'),
       initialContent: initialContent,
       initialSourceType: SourceType.html,
-      height: screenSize.height / 2,
-      width: min(screenSize.width * 0.8, 1024),
-      onWebViewCreated: (controller) => webviewController = controller,
+      onWebViewCreated: (controller) {
+
+        print(controller);
+        webviewController = controller;
+
+      },
       onPageStarted: (src) =>
           debugPrint('A new page has started loading: $src\n'),
       onPageFinished: (src) =>

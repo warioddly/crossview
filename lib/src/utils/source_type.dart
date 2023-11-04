@@ -3,4 +3,5 @@ enum SourceType {
   html,
   url,
   urlBypass,
+  assets,
 }
