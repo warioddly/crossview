@@ -4,7 +4,7 @@
 /// Usage:
 ///
 /// ```dart
-/// WebViewX(
+/// CrossView(
 ///   ...
 ///   dartCallbacks: {
 ///     DartCallback(

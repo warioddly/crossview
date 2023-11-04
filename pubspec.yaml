@@ -1,6 +1,6 @@
 name: crossview
-description: A new Flutter project.
-version: 0.0.1
+description: CrossView - Cross-Platform WebView Library for Flutter
+version: 0.0.2
 homepage: https://github.com/warioddly/crossview
 
 environment:

@@ -21,7 +21,7 @@ abstract class CrossView {
 
   /// Callback which returns a referrence to the [ICrossViewController]
   /// being created.
-  final Function(CrossViewController controller)? onWebViewCreated;
+  final Function(CrossViewController controller)? onCreated;
 
   /// A set of [EmbeddedJsContent].
   ///
@@ -69,12 +69,12 @@ abstract class CrossView {
   /// if all features become cross platform.
   final MobileSpecificParams mobileSpecificParams;
 
-  // /// Constructor
+  /// Constructor
   const CrossView({
     this.initialContent = 'about:blank',
     this.initialSourceType = SourceType.url,
     this.userAgent,
-    this.onWebViewCreated,
+    this.onCreated,
     this.jsContent = const {},
     this.dartCallBacks = const {},
     this.ignoreAllGestures = false,

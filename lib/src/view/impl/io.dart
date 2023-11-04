@@ -31,7 +31,7 @@ class CrossView extends StatelessWidget implements view_interface.CrossView {
   /// Callback which returns a referrence to the [CrossViewController]
   /// being created.
   @override
-  final Function(ctrl_interface.CrossViewController controller)? onWebViewCreated;
+  final Function(ctrl_interface.CrossViewController controller)? onCreated;
 
   /// A set of [EmbeddedJsContent].
   ///
@@ -96,7 +96,7 @@ class CrossView extends StatelessWidget implements view_interface.CrossView {
     this.initialContent = 'about:blank',
     this.initialSourceType = SourceType.url,
     this.userAgent,
-    this.onWebViewCreated,
+    this.onCreated,
     this.jsContent = const {},
     this.dartCallBacks = const {},
     this.ignoreAllGestures = false,
@@ -118,7 +118,7 @@ class CrossView extends StatelessWidget implements view_interface.CrossView {
       userAgent: userAgent,
       dartCallBacks: dartCallBacks,
       jsContent: jsContent,
-      onWebViewCreated: onWebViewCreated,
+      onCreated: onCreated,
       ignoreAllGestures: ignoreAllGestures,
       javascriptMode: javascriptMode,
       onPageStarted: onPageStarted,

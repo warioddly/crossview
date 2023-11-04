@@ -41,7 +41,7 @@ class CrossView extends StatefulWidget implements view_interface.CrossView {
   /// being created.
   @override
   final Function(ctrl_interface.CrossViewController controller)?
-      onWebViewCreated;
+      onCreated;
 
   /// A set of [EmbeddedJsContent].
   ///
@@ -105,7 +105,7 @@ class CrossView extends StatefulWidget implements view_interface.CrossView {
     this.initialContent = 'about:blank',
     this.initialSourceType = SourceType.url,
     this.userAgent,
-    this.onWebViewCreated,
+    this.onCreated,
     this.jsContent = const {},
     this.dartCallBacks = const {},
     this.ignoreAllGestures = false,
@@ -172,10 +172,10 @@ class _CrossViewState extends State<CrossView> {
 
   CrossViewController _createCrossViewController() {
     return CrossViewController(
-      initialContent: widget.initialContent,
-      initialSourceType: widget.initialSourceType,
-      ignoreAllGestures: _ignoreAllGestures,
-    )
+        initialContent: widget.initialContent,
+        initialSourceType: widget.initialSourceType,
+        ignoreAllGestures: _ignoreAllGestures,
+      )
       ..addListener(_handleChange)
       ..addIgnoreGesturesListener(_handleIgnoreGesturesChange);
   }
@@ -272,7 +272,7 @@ class _CrossViewState extends State<CrossView> {
   }
 
   void _callOnWebViewCreatedCallback() {
-    widget.onWebViewCreated?.call(crossViewController);
+    widget.onCreated?.call(crossViewController);
   }
 
   void _callOnPageStartedCallback(String src) {

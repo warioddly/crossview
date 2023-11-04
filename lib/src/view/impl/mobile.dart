@@ -31,7 +31,7 @@ class CrossView extends StatefulWidget implements view_interface.CrossView {
   /// Callback which returns a referrence to the [CrossViewController]
   /// being created.
   @override
-  final Function(ctrl_interface.CrossViewController controller)? onWebViewCreated;
+  final Function(ctrl_interface.CrossViewController controller)? onCreated;
 
   /// A set of [EmbeddedJsContent].
   ///
@@ -95,7 +95,7 @@ class CrossView extends StatefulWidget implements view_interface.CrossView {
     this.initialContent = 'about:blank',
     this.initialSourceType = SourceType.url,
     this.userAgent,
-    this.onWebViewCreated,
+    this.onCreated,
     this.jsContent = const {},
     this.dartCallBacks = const {},
     this.ignoreAllGestures = false,
@@ -147,17 +147,7 @@ class _CrossViewState extends State<CrossView> {
           child: wf.WebViewWidget(
             key: widget.key,
             controller: originalWebViewController,
-            // initialUrl: _initialContent(),
-            // javascriptMode: javascriptMode,
-            // onWebViewCreated: onWebViewCreated,
-            // javascriptChannels: javascriptChannels,
             gestureRecognizers: widget.mobileSpecificParams.mobileGestureRecognizers ?? {},
-            // initialMediaPlaybackPolicy: initialMediaPlaybackPolicy,
-            // onWebResourceError: onWebResourceError,
-            // gestureNavigationEnabled: widget.mobileSpecificParams.gestureNavigationEnabled,
-            // debuggingEnabled: widget.mobileSpecificParams.debuggingEnabled,
-            // navigationDelegate: navigationDelegate,
-            // userAgent: widget.userAgent,
           ),
         ),
       ),
@@ -167,11 +157,18 @@ class _CrossViewState extends State<CrossView> {
 
   void _init() {
 
-    crossViewController = _createCrossViewController();
 
     originalWebViewController
       ..setUserAgent(widget.userAgent)
       ..setJavaScriptMode(widget.javascriptMode);
+
+    crossViewController = _createCrossViewController()
+      ..connector = originalWebViewController;
+
+    widget.onCreated?.call(crossViewController);
+
+
+    _handleChange();
 
 
     void onWebResourceError(WebResourceError err) =>
@@ -215,18 +212,6 @@ class _CrossViewState extends State<CrossView> {
       }
     }
 
-    void onWebViewCreated(wf.WebViewController webViewController) {
-      originalWebViewController = webViewController;
-
-      crossViewController.connector = originalWebViewController;
-      // Calls onWebViewCreated to pass the refference upstream
-      if (widget.onWebViewCreated != null) {
-        widget.onWebViewCreated!(crossViewController);
-      }
-
-    }
-
-    onWebViewCreated(originalWebViewController);
 
     // final javascriptChannels = widget.dartCallBacks
     //     .map(
@@ -239,8 +224,8 @@ class _CrossViewState extends State<CrossView> {
   }
 
 
-  // Returns initial data
   String? _initialContent() {
+
     if (widget.initialSourceType == SourceType.html) {
       return HtmlUtils.preprocessSource(
         widget.initialContent,
@@ -248,10 +233,10 @@ class _CrossViewState extends State<CrossView> {
         encodeHtml: true,
       );
     }
+
     return widget.initialContent;
   }
 
-  // Creates a CrossViewController and adds the listener
   CrossViewController _createCrossViewController() {
     return CrossViewController(
         initialContent: widget.initialContent,
@@ -263,7 +248,6 @@ class _CrossViewState extends State<CrossView> {
   }
   
 
-  // Called when CrossViewController updates it's value
   void _handleChange() {
     
     final data = crossViewController.value;
@@ -273,8 +257,9 @@ class _CrossViewState extends State<CrossView> {
         originalWebViewController.loadHtmlString(HtmlUtils.preprocessSource(
             data.source,
             jsContent: widget.jsContent,
-            encodeHtml: true,
-          ));
+            encodeHtml: false,
+          ),
+        );
         break;
       case SourceType.url:
         originalWebViewController.loadRequest(
@@ -291,15 +276,8 @@ class _CrossViewState extends State<CrossView> {
         break;
     }
 
-    // originalWebViewController.loadUrl(
-    //   _prepareContent(data),
-    //   headers: data.headers,
-    // );
-
-
   }
 
-  // Called when the ValueNotifier inside CrossViewController updates it's value
   void _handleIgnoreGesturesChange() {
     setState(() => _ignoreAllGestures = crossViewController.ignoresAllGestures);
   }

@@ -26,7 +26,7 @@ class CrossView extends StatelessWidget implements view_interface.CrossView {
   /// Callback which returns a referrence to the [CrossViewController]
   /// being created.
   @override
-  final Function(ctrl_interface.CrossViewController controller)? onWebViewCreated;
+  final Function(ctrl_interface.CrossViewController controller)? onCreated;
 
   /// A set of [EmbeddedJsContent].
   ///
@@ -91,7 +91,7 @@ class CrossView extends StatelessWidget implements view_interface.CrossView {
     this.initialContent = 'about:blank',
     this.initialSourceType = SourceType.url,
     this.userAgent,
-    this.onWebViewCreated,
+    this.onCreated,
     this.jsContent = const {},
     this.dartCallBacks = const {},
     this.ignoreAllGestures = false,
@@ -106,7 +106,7 @@ class CrossView extends StatelessWidget implements view_interface.CrossView {
 
   @override
   Widget build(BuildContext context) {
-    throw UnimplementedError('Cannot call build on the facade implementation of WebViewX.');
+    throw UnimplementedError('Cannot call build on the facade implementation of CrossView.');
   }
 
 
