@@ -10,17 +10,17 @@
 
 #define CROSSVIEW_PLUGIN(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj), crossview_plugin_get_type(), \
-                              CrossviewPlugin))
+                              CrossViewPlugin))
 
-struct _CrossviewPlugin {
+struct _CrossViewPlugin {
   GObject parent_instance;
 };
 
-G_DEFINE_TYPE(CrossviewPlugin, crossview_plugin, g_object_get_type())
+G_DEFINE_TYPE(CrossViewPlugin, crossview_plugin, g_object_get_type())
 
 // Called when a method call is received from Flutter.
 static void crossview_plugin_handle_method_call(
-    CrossviewPlugin* self,
+    CrossViewPlugin* self,
     FlMethodCall* method_call) {
   g_autoptr(FlMethodResponse) response = nullptr;
 
@@ -47,20 +47,20 @@ static void crossview_plugin_dispose(GObject* object) {
   G_OBJECT_CLASS(crossview_plugin_parent_class)->dispose(object);
 }
 
-static void crossview_plugin_class_init(CrossviewPluginClass* klass) {
+static void crossview_plugin_class_init(CrossViewPluginClass* klass) {
   G_OBJECT_CLASS(klass)->dispose = crossview_plugin_dispose;
 }
 
-static void crossview_plugin_init(CrossviewPlugin* self) {}
+static void crossview_plugin_init(CrossViewPlugin* self) {}
 
 static void method_call_cb(FlMethodChannel* channel, FlMethodCall* method_call,
                            gpointer user_data) {
-  CrossviewPlugin* plugin = CROSSVIEW_PLUGIN(user_data);
+  CrossViewPlugin* plugin = CROSSVIEW_PLUGIN(user_data);
   crossview_plugin_handle_method_call(plugin, method_call);
 }
 
 void crossview_plugin_register_with_registrar(FlPluginRegistrar* registrar) {
-  CrossviewPlugin* plugin = CROSSVIEW_PLUGIN(
+  CrossViewPlugin* plugin = CROSSVIEW_PLUGIN(
       g_object_new(crossview_plugin_get_type(), nullptr));
 
   g_autoptr(FlStandardMethodCodec) codec = fl_standard_method_codec_new();

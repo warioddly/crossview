@@ -15,6 +15,8 @@ class WebViewXPage extends StatefulWidget {
 }
 
 class _WebViewXPageState extends State<WebViewXPage> {
+  
+  
   late CrossViewController webviewController;
   final initialContent =
       '<h4> This is some hardcoded HTML code embedded inside the webview <h4> <h2> Hello world! <h2>';

@@ -8,17 +8,17 @@
 
 namespace crossview {
 
-class CrossviewPlugin : public flutter::Plugin {
+class CrossViewPlugin : public flutter::Plugin {
  public:
   static void RegisterWithRegistrar(flutter::PluginRegistrarWindows *registrar);
 
-  CrossviewPlugin();
+  CrossViewPlugin();
 
-  virtual ~CrossviewPlugin();
+  virtual ~CrossViewPlugin();
 
   // Disallow copy and assign.
-  CrossviewPlugin(const CrossviewPlugin&) = delete;
-  CrossviewPlugin& operator=(const CrossviewPlugin&) = delete;
+  CrossViewPlugin(const CrossViewPlugin&) = delete;
+  CrossViewPlugin& operator=(const CrossViewPlugin&) = delete;
 
   // Called when a method is called on this plugin's channel from Dart.
   void HandleMethodCall(

@@ -21,10 +21,10 @@ class CrossViewController extends ChangeNotifier implements i.CrossViewControlle
 
   // Stack-based custom history
   // First entry is the current url, last entry is the initial url
-  final HistoryStack<WebViewContent> _history;
+  final HistoryStack<CrossViewContent> _history;
 
   /// INTERNAL
-  WebViewContent get value => _history.currentEntry;
+  CrossViewContent get value => _history.currentEntry;
 
   /// Constructor
   CrossViewController({
@@ -32,8 +32,8 @@ class CrossViewController extends ChangeNotifier implements i.CrossViewControlle
     required SourceType initialSourceType,
     required bool ignoreAllGestures,
   })  : _ignoreAllGesturesNotifier = ValueNotifier(ignoreAllGestures),
-        _history = HistoryStack<WebViewContent>(
-          initialEntry: WebViewContent(
+        _history = HistoryStack<CrossViewContent>(
+          initialEntry: CrossViewContent(
             source: initialContent,
             sourceType: initialSourceType,
           ),
@@ -84,19 +84,19 @@ class CrossViewController extends ChangeNotifier implements i.CrossViewControlle
     Object? body,
     bool fromAssets = false,
   }) async {
-    WebViewContent newContent;
+    CrossViewContent newContent;
 
     if (fromAssets) {
       final contentFromAssets = await rootBundle.loadString(content);
 
-      newContent = WebViewContent(
+      newContent = CrossViewContent(
         source: contentFromAssets,
         sourceType: sourceType,
         headers: headers,
         webPostRequestBody: body,
       );
     } else {
-      newContent = WebViewContent(
+      newContent = CrossViewContent(
         source: content,
         sourceType: sourceType,
         headers: headers,
@@ -153,7 +153,7 @@ class CrossViewController extends ChangeNotifier implements i.CrossViewControlle
 
   /// Returns the current content
   @override
-  Future<WebViewContent> getContent() {
+  Future<CrossViewContent> getContent() {
     return Future.value(value);
   }
 
@@ -245,7 +245,7 @@ class CrossViewController extends ChangeNotifier implements i.CrossViewControlle
   /// is basically reimplemented by me from scratch using the [HistoryEntry] class.
   /// This had to be done because I couldn't intercept iframe's navigation events and
   /// current url.
-  void webRegisterNewHistoryEntry(WebViewContent content) {
+  void webRegisterNewHistoryEntry(CrossViewContent content) {
     _history.addEntry(content);
   }
 

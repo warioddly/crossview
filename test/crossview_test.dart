@@ -4,25 +4,25 @@ import 'package:crossview/crossview_platform_interface.dart';
 import 'package:crossview/crossview_method_channel.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
-class MockCrossviewPlatform
+class MockCrossViewPlatform
     with MockPlatformInterfaceMixin
-    implements CrossviewPlatform {
+    implements CrossViewPlatform {
 
   @override
   Future<String?> getPlatformVersion() => Future.value('42');
 }
 
 void main() {
-  final CrossviewPlatform initialPlatform = CrossviewPlatform.instance;
+  final CrossViewPlatform initialPlatform = CrossViewPlatform.instance;
 
-  test('$MethodChannelCrossview is the default instance', () {
-    expect(initialPlatform, isInstanceOf<MethodChannelCrossview>());
+  test('$MethodChannelCrossView is the default instance', () {
+    expect(initialPlatform, isInstanceOf<MethodChannelCrossView>());
   });
 
   test('getPlatformVersion', () async {
     CrossView crossviewPlugin = CrossView();
-    MockCrossviewPlatform fakePlatform = MockCrossviewPlatform();
-    CrossviewPlatform.instance = fakePlatform;
+    MockCrossViewPlatform fakePlatform = MockCrossViewPlatform();
+    CrossViewPlatform.instance = fakePlatform;
 
     expect(await crossviewPlugin.getPlatformVersion(), '42');
   });

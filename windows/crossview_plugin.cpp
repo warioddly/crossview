@@ -16,14 +16,14 @@
 namespace crossview {
 
 // static
-void CrossviewPlugin::RegisterWithRegistrar(
+void CrossViewPlugin::RegisterWithRegistrar(
     flutter::PluginRegistrarWindows *registrar) {
   auto channel =
       std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
           registrar->messenger(), "crossview",
           &flutter::StandardMethodCodec::GetInstance());
 
-  auto plugin = std::make_unique<CrossviewPlugin>();
+  auto plugin = std::make_unique<CrossViewPlugin>();
 
   channel->SetMethodCallHandler(
       [plugin_pointer = plugin.get()](const auto &call, auto result) {
@@ -33,11 +33,11 @@ void CrossviewPlugin::RegisterWithRegistrar(
   registrar->AddPlugin(std::move(plugin));
 }
 
-CrossviewPlugin::CrossviewPlugin() {}
+CrossViewPlugin::CrossViewPlugin() {}
 
-CrossviewPlugin::~CrossviewPlugin() {}
+CrossViewPlugin::~CrossViewPlugin() {}
 
-void CrossviewPlugin::HandleMethodCall(
+void CrossViewPlugin::HandleMethodCall(
     const flutter::MethodCall<flutter::EncodableValue> &method_call,
     std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result) {
   if (method_call.method_name().compare("getPlatformVersion") == 0) {

@@ -3,8 +3,8 @@ import 'package:flutter/services.dart';
 
 import 'crossview_platform_interface.dart';
 
-/// An implementation of [CrossviewPlatform] that uses method channels.
-class MethodChannelCrossview extends CrossviewPlatform {
+/// An implementation of [CrossViewPlatform] that uses method channels.
+class MethodChannelCrossView extends CrossViewPlatform {
   /// The method channel used to interact with the native platform.
   @visibleForTesting
   final methodChannel = const MethodChannel('crossview');

@@ -8,13 +8,13 @@ import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 
 import 'crossview_platform_interface.dart';
 
-/// A web implementation of the CrossviewPlatform of the CrossView plugin.
-class CrossviewWeb extends CrossviewPlatform {
-  /// Constructs a CrossviewWeb
-  CrossviewWeb();
+/// A web implementation of the CrossViewPlatform of the CrossView plugin.
+class CrossViewWeb extends CrossViewPlatform {
+  /// Constructs a CrossViewWeb
+  CrossViewWeb();
 
   static void registerWith(Registrar registrar) {
-    CrossviewPlatform.instance = CrossviewWeb();
+    CrossViewPlatform.instance = CrossViewWeb();
   }
 
   /// Returns a [String] containing the version of the platform.

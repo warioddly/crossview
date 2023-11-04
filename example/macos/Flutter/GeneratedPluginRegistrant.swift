@@ -8,5 +8,5 @@ import Foundation
 import crossview
 
 func RegisterGeneratedPlugins(registry: FlutterPluginRegistry) {
-  CrossviewPlugin.register(with: registry.registrar(forPlugin: "CrossviewPlugin"))
+  CrossViewPlugin.register(with: registry.registrar(forPlugin: "CrossViewPlugin"))
 }

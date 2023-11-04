@@ -1,10 +1,10 @@
 import Flutter
 import UIKit
 
-public class CrossviewPlugin: NSObject, FlutterPlugin {
+public class CrossViewPlugin: NSObject, FlutterPlugin {
   public static func register(with registrar: FlutterPluginRegistrar) {
     let channel = FlutterMethodChannel(name: "crossview", binaryMessenger: registrar.messenger())
-    let instance = CrossviewPlugin()
+    let instance = CrossViewPlugin()
     registrar.addMethodCallDelegate(instance, channel: channel)
   }
 

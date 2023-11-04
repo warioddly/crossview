@@ -20,7 +20,7 @@ class CrossViewController extends ChangeNotifier implements i.CrossViewControlle
 
   /// INTERNAL
   /// Used to tell the last used [SourceType] and last headers.
-  late WebViewContent value;
+  late CrossViewContent value;
 
   /// Constructor
   CrossViewController({
@@ -28,7 +28,7 @@ class CrossViewController extends ChangeNotifier implements i.CrossViewControlle
     required SourceType initialSourceType,
     required bool ignoreAllGestures,
   })  : _ignoreAllGesturesNotifier = ValueNotifier(ignoreAllGestures),
-        value = WebViewContent(
+        value = CrossViewContent(
           source: initialContent,
           sourceType: initialSourceType,
         );
@@ -81,13 +81,13 @@ class CrossViewController extends ChangeNotifier implements i.CrossViewControlle
     if (fromAssets) {
       final _content = await rootBundle.loadString(content);
 
-      value = WebViewContent(
+      value = CrossViewContent(
         source: _content,
         sourceType: sourceType,
         headers: headers,
       );
     } else {
-      value = WebViewContent(
+      value = CrossViewContent(
         source: content,
         sourceType: sourceType,
         headers: headers,
@@ -148,7 +148,7 @@ class CrossViewController extends ChangeNotifier implements i.CrossViewControlle
 
   /// Returns the current content
   @override
-  Future<WebViewContent> getContent() async {
+  Future<CrossViewContent> getContent() async {
     var currentContent = await connector.currentUrl();
     var currentSourceType = value.sourceType;
 

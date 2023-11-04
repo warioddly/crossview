@@ -13,7 +13,7 @@
 extern "C" {
 #endif
 
-FLUTTER_PLUGIN_EXPORT void CrossviewPluginCApiRegisterWithRegistrar(
+FLUTTER_PLUGIN_EXPORT void CrossViewPluginCApiRegisterWithRegistrar(
     FlutterDesktopPluginRegistrarRef registrar);
 
 #if defined(__cplusplus)

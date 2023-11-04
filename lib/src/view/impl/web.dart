@@ -406,7 +406,7 @@ class _CrossViewState extends State<CrossView> {
   }
 
   // Updates the source depending if it is HTML or URL
-  void _updateSource(WebViewContent model) {
+  void _updateSource(CrossViewContent model) {
     final source = model.source;
 
     if (source.isEmpty) {
@@ -509,7 +509,7 @@ class _CrossViewState extends State<CrossView> {
     ).then((source) {
       _setPageSourceAfterBypass(url, source);
 
-      crossViewController.webRegisterNewHistoryEntry(WebViewContent(
+      crossViewController.webRegisterNewHistoryEntry(CrossViewContent(
         source: url,
         sourceType: SourceType.urlBypass,
         headers: headers,

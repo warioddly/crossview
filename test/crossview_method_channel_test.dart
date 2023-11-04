@@ -5,7 +5,7 @@ import 'package:crossview/crossview_method_channel.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  MethodChannelCrossview platform = MethodChannelCrossview();
+  MethodChannelCrossView platform = MethodChannelCrossView();
   const MethodChannel channel = MethodChannel('crossview');
 
   setUp(() {

@@ -4,9 +4,9 @@
 
 #include "crossview_plugin.h"
 
-void CrossviewPluginCApiRegisterWithRegistrar(
+void CrossViewPluginCApiRegisterWithRegistrar(
     FlutterDesktopPluginRegistrarRef registrar) {
-  crossview::CrossviewPlugin::RegisterWithRegistrar(
+  crossview::CrossViewPlugin::RegisterWithRegistrar(
       flutter::PluginRegistrarManager::GetInstance()
           ->GetRegistrar<flutter::PluginRegistrarWindows>(registrar));
 }

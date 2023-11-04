@@ -11,10 +11,10 @@ G_BEGIN_DECLS
 #define FLUTTER_PLUGIN_EXPORT
 #endif
 
-typedef struct _CrossviewPlugin CrossviewPlugin;
+typedef struct _CrossViewPlugin CrossViewPlugin;
 typedef struct {
   GObjectClass parent_class;
-} CrossviewPluginClass;
+} CrossViewPluginClass;
 
 FLUTTER_PLUGIN_EXPORT GType crossview_plugin_get_type();
 

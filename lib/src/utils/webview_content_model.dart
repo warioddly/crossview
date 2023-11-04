@@ -4,7 +4,7 @@ import 'package:crossview/src/utils/source_type.dart';
 /// Model class for webview's content
 ///
 /// This is the result of calling [await crossviewController.getContent()]
-class WebViewContent {
+class CrossViewContent {
   /// Source
   final String source;
 
@@ -15,51 +15,51 @@ class WebViewContent {
   final Map<String, String>? headers;
 
   /// POST request body, on WEB only
-  final Object? webPostRequestBody;
+  final Uint8List? body;
 
   /// Constructor
-  const WebViewContent({
+  const CrossViewContent({
     required this.source,
     required this.sourceType,
     this.headers,
-    this.webPostRequestBody,
+    this.body,
   });
 
-  WebViewContent copyWith({
+  CrossViewContent copyWith({
     String? source,
     SourceType? sourceType,
     Map<String, String>? headers,
-    Object? webPostRequestBody,
+    Object? body,
   }) =>
-      WebViewContent(
+      CrossViewContent(
         source: source ?? this.source,
         sourceType: sourceType ?? this.sourceType,
         headers: headers ?? this.headers,
-        webPostRequestBody: webPostRequestBody ?? this.webPostRequestBody,
+        body: body ?? this.body,
       );
 
   @override
   String toString() {
-    return 'WebViewContent:\n'
+    return 'CrossViewContent:\n'
         'Source: $source\n'
         'SourceType: ${describeEnum(sourceType)}\n'
         'Last request Headers: ${headers ?? 'none'}\n'
-        'Last request Body: ${webPostRequestBody ?? 'none'}\n';
+        'Last request Body: ${body ?? 'none'}\n';
   }
 
   @override
   bool operator ==(Object other) =>
       identical(other, this) ||
-      (other is WebViewContent &&
+      (other is CrossViewContent &&
           other.source == source &&
           other.sourceType == sourceType &&
           other.headers == headers &&
-          other.webPostRequestBody == webPostRequestBody);
+          other.body == body);
 
   @override
   int get hashCode =>
       source.hashCode ^
       sourceType.hashCode ^
       headers.hashCode ^
-      webPostRequestBody.hashCode;
+      body.hashCode;
 }

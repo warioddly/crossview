@@ -2,23 +2,23 @@ import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
 import 'crossview_method_channel.dart';
 
-abstract class CrossviewPlatform extends PlatformInterface {
-  /// Constructs a CrossviewPlatform.
-  CrossviewPlatform() : super(token: _token);
+abstract class CrossViewPlatform extends PlatformInterface {
+  /// Constructs a CrossViewPlatform.
+  CrossViewPlatform() : super(token: _token);
 
   static final Object _token = Object();
 
-  static CrossviewPlatform _instance = MethodChannelCrossview();
+  static CrossViewPlatform _instance = MethodChannelCrossView();
 
-  /// The default instance of [CrossviewPlatform] to use.
+  /// The default instance of [CrossViewPlatform] to use.
   ///
-  /// Defaults to [MethodChannelCrossview].
-  static CrossviewPlatform get instance => _instance;
+  /// Defaults to [MethodChannelCrossView].
+  static CrossViewPlatform get instance => _instance;
 
   /// Platform-specific implementations should set this with their own
-  /// platform-specific class that extends [CrossviewPlatform] when
+  /// platform-specific class that extends [CrossViewPlatform] when
   /// they register themselves.
-  static set instance(CrossviewPlatform instance) {
+  static set instance(CrossViewPlatform instance) {
     PlatformInterface.verifyToken(instance, _token);
     _instance = instance;
   }

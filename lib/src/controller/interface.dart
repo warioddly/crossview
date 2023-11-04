@@ -79,7 +79,7 @@ abstract class CrossViewController<T> {
   });
 
   /// Returns the current content
-  Future<WebViewContent> getContent();
+  Future<CrossViewContent> getContent();
 
   /// Returns a Future that completes with the value true, if you can go
   /// back in the history stack.
