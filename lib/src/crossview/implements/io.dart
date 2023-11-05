@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:crossview/src/utils/utils.dart';
+import 'package:crossview/src/crossview/interface.dart' as view_interface;
 import 'package:crossview/src/controller/interface.dart' as ctrl_interface;
-import 'package:crossview/src/view/interface.dart' as view_interface;
+import 'package:crossview/src/crossview/implements/mobile.dart' as mobile;
 import 'package:webview_flutter/webview_flutter.dart' as wf;
 
-/// Facade class
+/// IO implementation
+///
+/// Will build the coresponding widget for the current IO platform
 class CrossView extends StatelessWidget implements view_interface.CrossView {
   /// Initial content
   @override
@@ -57,21 +60,10 @@ class CrossView extends StatelessWidget implements view_interface.CrossView {
   final wf.JavaScriptMode javascriptMode;
 
 
-  /// Callback for when the page starts loading.
-  @override
-  final void Function(String src)? onPageStarted;
-
-  /// Callback for when the page has finished loading (i.e. is shown on screen).
-  @override
-  final void Function(String src)? onPageFinished;
-
   /// Callback to decide whether to allow navigation to the incoming url
   @override
-  final NavigationDelegate? navigationDelegate;
+  final wf.NavigationDelegate? navigationDelegate;
 
-  /// Callback for when something goes wrong in while page or resources load.
-  @override
-  final void Function(WebResourceError error)? onWebResourceError;
 
   /// Parameters specific to the web version.
   /// This may eventually be merged with [mobileSpecificParams],
@@ -96,17 +88,27 @@ class CrossView extends StatelessWidget implements view_interface.CrossView {
     this.dartCallBacks = const {},
     this.ignoreAllGestures = false,
     this.javascriptMode = wf.JavaScriptMode.unrestricted,
-    this.onPageStarted,
-    this.onPageFinished,
     this.navigationDelegate,
-    this.onWebResourceError,
     this.webSpecificParams = const WebSpecificParams(),
     this.mobileSpecificParams = const MobileSpecificParams(),
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    throw UnimplementedError('Cannot call build on the facade implementation of CrossView.');
+    return mobile.CrossView(
+      key: key,
+      initialContent: initialContent,
+      initialSourceType: initialSourceType,
+      userAgent: userAgent,
+      dartCallBacks: dartCallBacks,
+      jsContent: jsContent,
+      onCreated: onCreated,
+      ignoreAllGestures: ignoreAllGestures,
+      javascriptMode: javascriptMode,
+      navigationDelegate: navigationDelegate,
+      webSpecificParams: webSpecificParams,
+      mobileSpecificParams: mobileSpecificParams,
+    );
   }
 
 

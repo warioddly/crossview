@@ -2,19 +2,17 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:html' as html;
 import 'dart:js' as js;
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:pointer_interceptor/pointer_interceptor.dart';
-
 import 'package:crossview/src/utils/dart_ui_fix.dart' as ui;
 import 'package:crossview/src/utils/constants.dart';
 import 'package:crossview/src/utils/logger.dart';
 import 'package:crossview/src/utils/utils.dart';
-import 'package:crossview/src/controller/impl/web.dart';
+import 'package:crossview/src/controller/implements/web.dart';
 import 'package:crossview/src/controller/interface.dart' as ctrl_interface;
-import 'package:crossview/src/view/interface.dart' as view_interface;
+import 'package:crossview/src/crossview/interface.dart' as view_interface;
 import 'package:webview_flutter/webview_flutter.dart' as wf;
 
 
@@ -71,21 +69,11 @@ class CrossView extends StatefulWidget implements view_interface.CrossView {
   @override
   final wf.JavaScriptMode javascriptMode;
 
-  /// Callback for when the page starts loading.
-  @override
-  final void Function(String src)? onPageStarted;
-
-  /// Callback for when the page has finished loading (i.e. is shown on screen).
-  @override
-  final void Function(String src)? onPageFinished;
 
   /// Callback to decide whether to allow navigation to the incoming url
   @override
-  final NavigationDelegate? navigationDelegate;
+  final wf.NavigationDelegate? navigationDelegate;
 
-  /// Callback for when something goes wrong in while page or resources load.
-  @override
-  final void Function(WebResourceError error)? onWebResourceError;
 
   /// Parameters specific to the web version.
   /// This may eventually be merged with [mobileSpecificParams],
@@ -110,10 +98,7 @@ class CrossView extends StatefulWidget implements view_interface.CrossView {
     this.dartCallBacks = const {},
     this.ignoreAllGestures = false,
     this.javascriptMode = wf.JavaScriptMode.unrestricted,
-    this.onPageStarted,
-    this.onPageFinished,
     this.navigationDelegate,
-    this.onWebResourceError,
     this.webSpecificParams = const WebSpecificParams(),
     this.mobileSpecificParams = const MobileSpecificParams(),
   }) : super(key: key);
@@ -123,6 +108,7 @@ class CrossView extends StatefulWidget implements view_interface.CrossView {
 }
 
 class _CrossViewState extends State<CrossView> {
+
   late html.IFrameElement iframe;
   late String iframeViewType;
   late StreamSubscription iframeOnLoadSubscription;
@@ -132,6 +118,7 @@ class _CrossViewState extends State<CrossView> {
 
   late bool _didLoadInitialContent;
   late bool _ignoreAllGestures;
+
 
   @override
   void initState() {
@@ -164,18 +151,42 @@ class _CrossViewState extends State<CrossView> {
     });
   }
 
-  void _registerView(String viewType) {
-    ui.platformViewRegistry.registerViewFactory(viewType, (int viewId) {
-      return iframe;
-    });
+
+
+  @override
+  Widget build(BuildContext context) {
+    final htmlElementView = SizedBox(
+      height: MediaQuery.of(context).size.height,
+      width: MediaQuery.of(context).size.width,
+      child: AbsorbPointer(
+        child: RepaintBoundary(
+          child: HtmlElementView(
+            key: widget.key,
+            viewType: iframeViewType,
+          ),
+        ),
+      ),
+    );
+
+    return _iframeIgnorePointer(
+      ignoring: _ignoreAllGestures,
+      child: htmlElementView,
+    );
   }
+
+
+
+  void _registerView(String viewType) {
+    ui.platformViewRegistry.registerViewFactory(viewType, (int viewId) => iframe);
+  }
+
 
   CrossViewController _createCrossViewController() {
     return CrossViewController(
-        initialContent: widget.initialContent,
-        initialSourceType: widget.initialSourceType,
-        ignoreAllGestures: _ignoreAllGestures,
-      )
+          initialContent: widget.initialContent,
+          initialSourceType: widget.initialSourceType,
+          ignoreAllGestures: _ignoreAllGestures,
+        )
       ..addListener(_handleChange)
       ..addIgnoreGesturesListener(_handleIgnoreGesturesChange);
   }
@@ -258,6 +269,7 @@ class _CrossViewState extends State<CrossView> {
     };
   }
 
+
   void _registerIframeOnLoadCallback() {
     iframeOnLoadSubscription = iframe.onLoad.listen((event) {
       _debugLog('IFrame $iframeViewType has been (re)loaded.');
@@ -271,50 +283,29 @@ class _CrossViewState extends State<CrossView> {
     });
   }
 
+
   void _callOnWebViewCreatedCallback() {
     widget.onCreated?.call(crossViewController);
   }
 
+
   void _callOnPageStartedCallback(String src) {
-    widget.onPageStarted?.call(src);
+    widget.navigationDelegate?.onPageStarted?.call(src);
   }
+
 
   void _callOnPageFinishedCallback(String src) {
-    widget.onPageFinished?.call(src);
+    widget.navigationDelegate?.onPageFinished?.call(src);
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final htmlElementView = SizedBox(
-      height: MediaQuery.of(context).size.height,
-      width: MediaQuery.of(context).size.width,
-      child: AbsorbPointer(
-        child: RepaintBoundary(
-          child: HtmlElementView(
-            key: widget.key,
-            viewType: iframeViewType,
-          ),
-        ),
-      ),
-    );
-
-    return _iframeIgnorePointer(
-      ignoring: _ignoreAllGestures,
-      child: htmlElementView,
-    );
-  }
-
-  Widget _iframeIgnorePointer({
-    bool ignoring = false,
-    required Widget child,
-  }) {
+  Widget _iframeIgnorePointer({ bool ignoring = false, required Widget child }) {
     return Stack(
       children: [
         child,
         if (ignoring)
           Positioned.fill(
             child: PointerInterceptor(
-              child: Container(),
+              child: const SizedBox(),
             ),
           )
         else
@@ -323,10 +314,11 @@ class _CrossViewState extends State<CrossView> {
     );
   }
 
-  // This creates a unique String to be used as the view type of the HtmlElementView
+
   String _createViewType() {
     return HtmlUtils.buildIframeViewType();
   }
+
 
   html.IFrameElement _createIFrame() {
     final iframeElement = html.IFrameElement()
@@ -337,9 +329,7 @@ class _CrossViewState extends State<CrossView> {
       ..height = "100%"
       ..allowFullscreen = widget.webSpecificParams.webAllowFullscreenContent;
 
-    widget.webSpecificParams.additionalSandboxOptions.forEach(
-      iframeElement.sandbox!.add,
-    );
+    widget.webSpecificParams.additionalSandboxOptions.forEach(iframeElement.sandbox!.add);
 
     if (widget.javascriptMode == wf.JavaScriptMode.unrestricted) {
       iframeElement.sandbox!.add('allow-scripts');
@@ -347,13 +337,12 @@ class _CrossViewState extends State<CrossView> {
 
     final allow = widget.webSpecificParams.additionalAllowOptions;
 
-
     iframeElement.allow = allow.reduce((curr, next) => '$curr; $next');
 
     return iframeElement;
   }
 
-  // Called when CrossViewController updates it's value
+
   void _handleChange() {
     final model = crossViewController.value;
     final source = model.source;
@@ -362,33 +351,29 @@ class _CrossViewState extends State<CrossView> {
     _updateSource(model);
   }
 
-  // Called when CrossViewController updates it's ignoreAllGesturesNotifier value
+
   void _handleIgnoreGesturesChange() {
-    setState(() {
-      _ignoreAllGestures = crossViewController.ignoresAllGestures;
-    });
+    setState(() => _ignoreAllGestures = crossViewController.ignoresAllGestures);
   }
 
-  Future<bool> _checkNavigationAllowed(
-    String pageSource,
-    SourceType sourceType,
-  ) async {
-    if (widget.navigationDelegate == null) {
-      return true;
-    }
 
-    final decision = await widget.navigationDelegate!(
-      NavigationRequest(
-        content: NavigationContent(pageSource, sourceType),
+  Future<bool> _checkNavigationAllowed(String pageSource, SourceType sourceType) async {
+
+    if (widget.navigationDelegate == null) return true;
+
+    final decision = await widget.navigationDelegate?.onNavigationRequest?.call(
+      wf.NavigationRequest(
+        url: pageSource,
         isMainFrame: true,
-      ),
+      )
     );
 
-    return decision == NavigationDecision.navigate;
+    return decision == wf.NavigationDecision.navigate;
   }
 
-  // Updates the source depending if it is HTML or URL
+
   void _updateSource(CrossViewContent model) {
+
     final source = model.source;
 
     if (source.isEmpty) {
@@ -408,6 +393,7 @@ class _CrossViewState extends State<CrossView> {
       case SourceType.assets:
       case SourceType.url:
       case SourceType.urlBypass:
+
         if (source == 'about:blank') {
           iframe.srcdoc = HtmlUtils.preprocessSource(
             '<br>',
@@ -425,7 +411,8 @@ class _CrossViewState extends State<CrossView> {
 
         if (model.sourceType == SourceType.url) {
           iframe.contentWindow!.location.href = source;
-        } else {
+        }
+        else {
           _tryFetchRemoteSource(
             method: 'get',
             url: source,
@@ -434,11 +421,15 @@ class _CrossViewState extends State<CrossView> {
         }
         break;
     }
+
   }
 
+
   Future<void> _handleOnIframeClick(String receivedObject) async {
+
     final dartObj = jsonDecode(receivedObject) as Map<String, dynamic>;
     final href = dartObj['href'] as String;
+
     _debugLog(dartObj.toString());
 
     if (!await _checkNavigationAllowed(
@@ -447,7 +438,6 @@ class _CrossViewState extends State<CrossView> {
       return;
     }
 
-    // (ㆆ_ㆆ)
     if (href == 'javascript:history.back()') {
       crossViewController.goBack();
       return;
@@ -458,7 +448,6 @@ class _CrossViewState extends State<CrossView> {
 
     final method = dartObj['method'] as String;
     final body = dartObj['body'] as Uint8List?;
-
 
     _tryFetchRemoteSource(
       method: method,
@@ -490,15 +479,21 @@ class _CrossViewState extends State<CrossView> {
       ));
 
       _debugLog('Got a new history entry: $url\n');
+
     }).catchError((e) {
-      widget.onWebResourceError?.call(WebResourceError(
-        description: 'Failed to fetch the page at $url\nError:\n$e\n',
-        errorCode: WebResourceErrorType.connect.index,
-        errorType: WebResourceErrorType.connect,
-        domain: Uri.parse(url).authority,
-        failingUrl: url,
-      ));
+
+      widget.navigationDelegate?.onWebResourceError?.call(
+        wf.WebResourceError(
+          description: 'Failed to fetch the page at $url\nError:\n$e\n',
+          errorCode: wf.WebResourceErrorType.connect.index,
+          errorType: wf.WebResourceErrorType.connect,
+          url: url,
+          isForMainFrame: true
+        )
+      );
+
       _debugLog('Failed to fetch the page at $url\nError:\n$e\n');
+
     });
   }
 
@@ -552,7 +547,9 @@ class _CrossViewState extends State<CrossView> {
     return Future.error('Bad state');
   }
 
+
   void _setPageSourceAfterBypass(String pageUrl, String pageSource) {
+
     final replacedPageSource = HtmlUtils.embedClickListenersInPageSource(
       pageUrl,
       pageSource,
@@ -564,6 +561,7 @@ class _CrossViewState extends State<CrossView> {
       windowDisambiguator: iframeViewType,
       forWeb: true,
     );
+
   }
 
   void _debugLog(String text) {
@@ -572,13 +570,14 @@ class _CrossViewState extends State<CrossView> {
     }
   }
 
+  
   @override
   void dispose() {
     iframeOnLoadSubscription.cancel();
-    crossViewController.removeListener(_handleChange);
-    crossViewController.removeIgnoreGesturesListener(
-      _handleIgnoreGesturesChange,
-    );
+    crossViewController
+      ..removeListener(_handleChange)
+      ..removeIgnoreGesturesListener(_handleIgnoreGesturesChange);
     super.dispose();
   }
+
 }

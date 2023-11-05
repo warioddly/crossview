@@ -1,12 +1,9 @@
-import 'dart:async';
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:crossview/src/utils/utils.dart';
 import 'package:webview_flutter/webview_flutter.dart' as wf;
-
-import 'package:crossview/src/view/interface.dart' as view_interface;
+import 'package:crossview/src/crossview/interface.dart' as view_interface;
 import 'package:crossview/src/controller/interface.dart' as ctrl_interface;
-import 'package:crossview/src/controller/impl/mobile.dart';
+import 'package:crossview/src/controller/implements/mobile.dart';
 
 /// Mobile implementation
 class CrossView extends StatefulWidget implements view_interface.CrossView {
@@ -61,25 +58,11 @@ class CrossView extends StatefulWidget implements view_interface.CrossView {
   @override
   final wf.JavaScriptMode javascriptMode;
 
-  /// Callback for when the page starts loading.
-  @override
-  final void Function(String src)? onPageStarted;
-
-  /// Callback for when the page has finished loading (i.e. is shown on screen).
-  @override
-  final void Function(String src)? onPageFinished;
-
-
-
-
 
   /// Callback to decide whether to allow navigation to the incoming url
   @override
-  final NavigationDelegate? navigationDelegate;
+  final wf.NavigationDelegate? navigationDelegate;
 
-  /// Callback for when something goes wrong in while page or resources load.
-  @override
-  final void Function(WebResourceError error)? onWebResourceError;
 
   /// Parameters specific to the web version.
   /// This may eventually be merged with [mobileSpecificParams],
@@ -93,6 +76,7 @@ class CrossView extends StatefulWidget implements view_interface.CrossView {
   @override
   final MobileSpecificParams mobileSpecificParams;
 
+
   /// Constructor
   const CrossView({
     Key? key,
@@ -104,16 +88,14 @@ class CrossView extends StatefulWidget implements view_interface.CrossView {
     this.dartCallBacks = const {},
     this.ignoreAllGestures = false,
     this.javascriptMode = wf.JavaScriptMode.unrestricted,
-    this.onPageStarted,
-    this.onPageFinished,
     this.navigationDelegate,
-    this.onWebResourceError,
     this.webSpecificParams = const WebSpecificParams(),
     this.mobileSpecificParams = const MobileSpecificParams(),
   }) : super(key: key);
 
   @override
   _CrossViewState createState() => _CrossViewState();
+
 }
 
 class _CrossViewState extends State<CrossView> {
@@ -124,123 +106,71 @@ class _CrossViewState extends State<CrossView> {
 
   late bool _ignoreAllGestures;
 
+
   @override
   void initState() {
     super.initState();
-
-    _ignoreAllGestures = widget.ignoreAllGestures;
-
     _init();
-
-    if (Platform.isAndroid && widget.mobileSpecificParams.androidEnableHybridComposition) {
-      // wf.WebView.platform = wf.SurfaceAndroidWebView();
-    }
-
-
   }
 
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: SizedBox(
-        height: MediaQuery.of(context).size.width,
-        width: MediaQuery.of(context).size.width,
-        child: IgnorePointer(
-          ignoring: _ignoreAllGestures,
-          child: wf.WebViewWidget(
-            key: widget.key,
-            controller: originalWebViewController,
-            gestureRecognizers: widget.mobileSpecificParams.mobileGestureRecognizers ?? {},
-          ),
+    return SizedBox(
+      height: MediaQuery.of(context).size.width,
+      width: MediaQuery.of(context).size.width,
+      child: IgnorePointer(
+        ignoring: _ignoreAllGestures,
+        child: wf.WebViewWidget(
+          key: widget.key,
+          controller: originalWebViewController,
+          gestureRecognizers: widget.mobileSpecificParams.mobileGestureRecognizers ?? {},
         ),
-      ),
+      )
     );
   }
 
 
   void _init() {
 
+    _ignoreAllGestures = widget.ignoreAllGestures;
 
     originalWebViewController
       ..setUserAgent(widget.userAgent)
-      ..setOnConsoleMessage((message) {
-        print(message.message);
-      })
-      ..setNavigationDelegate(_createNavigationDelegate())
       ..setJavaScriptMode(widget.javascriptMode);
+      // ..setOnConsoleMessage((message) {
+      //   print(message.message);
+      // })
 
-    crossViewController = _createCrossViewController()
-      ..connector = originalWebViewController;
+    crossViewController = _createCrossViewController()..connector = originalWebViewController;
 
-    widget.onCreated?.call(crossViewController);
-
-
+    _createNavigationDelegate();
     _handleChange();
 
-  }
-
-
-  wf.NavigationDelegate _createNavigationDelegate() {
-    return wf.NavigationDelegate(
-      onProgress: (int progress) {
-        print("progress $progress");
-      },
-      onPageStarted: (String url) => widget.onPageStarted?.call(url),
-      onPageFinished: (String url) => widget.onPageFinished?.call(url),
-      onWebResourceError: (wf.WebResourceError err) {
-        return widget.onWebResourceError!(
-          WebResourceError(
-            description: err.description,
-            errorCode: err.errorCode,
-            domain: err.url,
-            errorType: WebResourceErrorType.values.singleWhere((value) => value.toString() == err.errorType.toString()),
-            failingUrl: err.url,
-          ),
-        );
-      },
-      onNavigationRequest: (wf.NavigationRequest request) async {
-
-        if (widget.navigationDelegate == null) {
-          crossViewController.value = crossViewController.value.copyWith(source: request.url);
-          return wf.NavigationDecision.navigate;
-        }
-
-        final delegate = await widget.navigationDelegate?.call(NavigationRequest(
-          content: NavigationContent(request.url, crossViewController.value.sourceType),
-          isMainFrame: request.isMainFrame,
-        ));
-
-        switch (delegate!) {
-          case NavigationDecision.navigate:
-          // When clicking on an URL, the sourceType stays the same.
-          // That's because you cannot move from URL to HTML just by clicking.
-          // Also we don't take URL_BYPASS into consideration because it has no effect here in mobile
-            crossViewController.value = crossViewController.value.copyWith(source: request.url);
-            return wf.NavigationDecision.navigate;
-        case NavigationDecision.prevent:
-          return wf.NavigationDecision.prevent;
-        //   default:
-        //     return wf.NavigationDecision.prevent;
-        }
-
-
-      }
-    );
+    widget.onCreated?.call(crossViewController);
 
   }
 
 
   CrossViewController _createCrossViewController() {
     return CrossViewController(
-        initialContent: widget.initialContent,
-        initialSourceType: widget.initialSourceType,
-        ignoreAllGestures: _ignoreAllGestures,
-      )
+      initialContent: widget.initialContent,
+      initialSourceType: widget.initialSourceType,
+      ignoreAllGestures: _ignoreAllGestures,
+    )
       ..addListener(_handleChange)
       ..addIgnoreGesturesListener(_handleIgnoreGesturesChange);
   }
-  
+
+
+  void _createNavigationDelegate() {
+
+    if (widget.navigationDelegate == null) return;
+
+    originalWebViewController.setNavigationDelegate(widget.navigationDelegate!);
+
+  }
+
 
   void _handleChange() {
     
@@ -252,10 +182,16 @@ class _CrossViewState extends State<CrossView> {
             data.source,
             jsContent: widget.jsContent,
             encodeHtml: false,
-          ),
-        );
+          ));
         break;
       case SourceType.url:
+        originalWebViewController.loadRequest(
+          Uri.parse(data.source),
+          headers: data.headers,
+          body: data.body
+        );
+        break;
+      case SourceType.urlBypass:
         originalWebViewController.loadRequest(
           Uri.parse(data.source),
           headers: data.headers,
@@ -272,16 +208,19 @@ class _CrossViewState extends State<CrossView> {
 
   }
 
+
   void _handleIgnoreGesturesChange() {
     setState(() => _ignoreAllGestures = crossViewController.ignoresAllGestures);
   }
 
+
   @override
   void dispose() {
-    crossViewController.removeListener(_handleChange);
-    crossViewController.removeIgnoreGesturesListener(
-      _handleIgnoreGesturesChange,
-    );
+    crossViewController
+      ..removeListener(_handleChange)
+      ..removeIgnoreGesturesListener(_handleIgnoreGesturesChange);
     super.dispose();
   }
+
+
 }

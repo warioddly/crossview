@@ -1,5 +1,4 @@
 import 'dart:typed_data';
-
 import 'package:crossview/src/utils/source_type.dart';
 import 'package:crossview/src/utils/webview_content_model.dart';
 
@@ -75,7 +74,7 @@ abstract class CrossViewController<T> {
   /// in the 'window' context, instead of doing it inside the corresponding iframe's 'window'
   ///
   /// For more info, check Mozilla documentation on 'window'
-  Future<dynamic> evalRawJavascript(
+  Future<dynamic> runRawJavascript(
     String rawJavascript, {
     bool inGlobalContext = false,
   });
@@ -120,4 +119,5 @@ abstract class CrossViewController<T> {
 
   /// Dispose resources
   void dispose();
+
 }

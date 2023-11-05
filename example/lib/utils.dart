@@ -29,7 +29,15 @@ void showSnackBar(String content, BuildContext context) {
     ..hideCurrentSnackBar()
     ..showSnackBar(
       SnackBar(
-        content: Text(content),
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.only(bottom: 60.0, left: 10.0, right: 10.0),
+        backgroundColor: Colors.black,
+        content: Text(
+          content,
+          style: const TextStyle(
+            color: Colors.white,
+          ),
+        ),
         duration: const Duration(seconds: 1),
       ),
     );

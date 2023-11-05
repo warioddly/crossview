@@ -1,27 +1,32 @@
 import 'dart:async' show Future;
+// ignore: avoid_web_libraries_in_flutter
+import 'dart:js' as js;
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show Uint8List, rootBundle;
-import 'package:webview_flutter/webview_flutter.dart' as wf;
-import 'package:crossview/src/utils/html_utils.dart';
+import 'package:flutter/services.dart' show rootBundle;
+import 'package:crossview/src/utils/logger.dart';
 import 'package:crossview/src/utils/source_type.dart';
 import 'package:crossview/src/utils/utils.dart';
+import 'package:crossview/src/utils/web_history.dart';
 
 import 'package:crossview/src/controller/interface.dart' as i;
 
-/// Mobile implementation
-class CrossViewController extends ChangeNotifier
-    implements i.CrossViewController<wf.WebViewController> {
-  /// Webview controller connector
+/// Web implementation
+class CrossViewController extends ChangeNotifier implements i.CrossViewController<js.JsObject> {
+  /// JsObject connector
   @override
-  late wf.WebViewController connector;
+  late js.JsObject connector;
 
-  /// Boolean value notifier used to toggle ignoring gestures on the webview
+  // Boolean value notifier used to toggle ignoring gestures on the webview
   final ValueNotifier<bool> _ignoreAllGesturesNotifier;
 
+  // Stack-based custom history
+  // First entry is the current url, last entry is the initial url
+  final HistoryStack<CrossViewContent> _history;
+
   /// INTERNAL
-  /// Used to tell the last used [SourceType] and last headers.
-  late CrossViewContent value;
+  CrossViewContent get value => _history.currentEntry;
 
   /// Constructor
   CrossViewController({
@@ -29,16 +34,18 @@ class CrossViewController extends ChangeNotifier
     required SourceType initialSourceType,
     required bool ignoreAllGestures,
   })  : _ignoreAllGesturesNotifier = ValueNotifier(ignoreAllGestures),
-        value = CrossViewContent(
-          source: initialContent,
-          sourceType: initialSourceType,
+        _history = HistoryStack<CrossViewContent>(
+          initialEntry: CrossViewContent(
+            source: initialContent,
+            sourceType: initialSourceType,
+          ),
         );
 
   /// Boolean getter which reveals if the gestures are ignored right now
   @override
   bool get ignoresAllGestures => _ignoreAllGesturesNotifier.value;
 
-  /// Set ignore gestures on/off (true/false)
+  /// Function to set ignoring gestures
   @override
   void setIgnoreAllGestures(bool value) {
     _ignoreAllGesturesNotifier.value = value;
@@ -54,7 +61,7 @@ class CrossViewController extends ChangeNotifier
 
   /// Returns true if the webview's current content is URL, and if
   /// [SourceType] is [SourceType.urlBypass], which means it should
-  /// use the bypass to fetch the web page content.
+  /// use the proxy bypass to fetch the web page content.
   @override
   bool get isCurrentContentURLBypass =>
       value.sourceType == SourceType.urlBypass;
@@ -73,29 +80,34 @@ class CrossViewController extends ChangeNotifier
   ///
   @override
   Future<void> loadContent(
-      String content,
-      SourceType sourceType, {
-      Map<String, String> headers = const {},
-      Uint8List? body,
-      bool fromAssets = false,
+    String content,
+    SourceType sourceType, {
+    Map<String, String> headers = const {},
+    Uint8List? body,
+    bool fromAssets = false,
   }) async {
+    CrossViewContent newContent;
+
     if (fromAssets) {
 
       final contentFromAssets = await rootBundle.loadString(content);
 
-      value = CrossViewContent(
+      newContent = CrossViewContent(
         source: contentFromAssets,
         sourceType: sourceType,
         headers: headers,
+        body: body,
       );
     } else {
-      value = CrossViewContent(
+      newContent = CrossViewContent(
         source: content,
         sourceType: sourceType,
         headers: headers,
+        body: body,
       );
     }
 
+    webRegisterNewHistoryEntry(newContent);
     _notifyWidget();
   }
 
@@ -114,23 +126,13 @@ class CrossViewController extends ChangeNotifier
   /// var resultFromJs = await callJsMethod('someFunction', ['test'])
   /// print(resultFromJs); // prints "This is a test"
   /// ```
-  //TODO This should return an error if the operation failed, but it doesn't
   @override
   Future<dynamic> callJsMethod(
     String name,
     List<dynamic> params,
-  ) async {
-    // This basically will transform a "raw" call (evaluateJavascript)
-    // into a little bit more "typed" call, that is - calling a method.
-    final result = await connector.runJavaScriptReturningResult(
-      HtmlUtils.buildJsFunction(name, params),
-    );
-
-    // (MOBILE ONLY) Unquotes response if necessary
-    //
-    // In the mobile version responses from Js to Dart come wrapped in single quotes (')
-    // The web works fine because it is already into it's native environment
-    return HtmlUtils.unQuoteJsResponseIfNeeded(result.toString());
+  ) {
+    final result = connector.callMethod(name, params);
+    return Future<dynamic>.value(result);
   }
 
   /// This function allows you to evaluate 'raw' javascript (e.g: 2+2)
@@ -141,105 +143,113 @@ class CrossViewController extends ChangeNotifier
   ///
   /// For more info, check Mozilla documentation on 'window'
   @override
-  Future<dynamic> evalRawJavascript(
+  Future<dynamic> runRawJavascript(
     String rawJavascript, {
-    bool inGlobalContext = false, // NO-OP HERE
+    bool inGlobalContext = false,
   }) {
-    return connector.runJavaScript(rawJavascript);
+    final result = (inGlobalContext ? js.context : connector).callMethod(
+      'eval',
+      [rawJavascript],
+    );
+    return Future<dynamic>.value(result);
   }
 
   /// Returns the current content
   @override
-  Future<CrossViewContent> getContent() async {
-    var currentContent = await connector.currentUrl();
-    var currentSourceType = value.sourceType;
-
-    if (currentContent!.substring(0, 5) == 'data:') {
-      currentContent = HtmlUtils.dataUriToHtml(currentContent);
-      currentSourceType = SourceType.html;
-    }
-
-    return value.copyWith(
-      source: currentContent,
-      sourceType: currentSourceType,
-    );
+  Future<CrossViewContent> getContent() {
+    return Future.value(value);
   }
 
   /// Returns a Future that completes with the value true, if you can go
   /// back in the history stack.
   @override
   Future<bool> canGoBack() {
-    return connector.canGoBack();
+    return Future.value(_history.canGoBack);
   }
 
   /// Go back in the history stack.
   @override
   Future<void> goBack() async {
-    if (await canGoBack()) {
-      await connector.goBack();
-      value = await getContent();
-    }
+    _history.moveBack();
+    log('Current history: ${_history.toString()}');
+
+    _notifyWidget();
   }
 
   /// Returns a Future that completes with the value true, if you can go
   /// forward in the history stack.
   @override
   Future<bool> canGoForward() {
-    return connector.canGoForward();
+    return Future.value(_history.canGoForward);
   }
 
   /// Go forward in the history stack.
   @override
   Future<void> goForward() async {
-    if (await canGoForward()) {
-      await connector.goForward();
-      final liveContent = await connector.currentUrl();
-      value = value.copyWith(source: liveContent);
-    }
+    _history.moveForward();
+    log('Current history: ${_history.toString()}');
+
+    _notifyWidget();
   }
 
   /// Reload the current content.
   @override
-  Future<void> reload() {
-    return connector.reload();
+  Future<void> reload() async {
+    _notifyWidget();
   }
 
   /// Get scroll position on X axis
   @override
-  Future<int> getScrollX() async {
-    Offset offset = await connector.getScrollPosition();
-    return offset.dx.toInt();
+  Future<int> getScrollX() {
+    return Future.value(int.tryParse(connector["scrollX"].toString()));
   }
 
   /// Get scroll position on Y axis
   @override
-  Future<int> getScrollY() async {
-    Offset offset = await connector.getScrollPosition();
-    return offset.dy.toInt();
+  Future<int> getScrollY() {
+    return Future.value(int.tryParse(connector["scrollY"].toString()));
   }
 
   /// Scrolls by `x` on X axis and by `y` on Y axis
   @override
   Future<void> scrollBy(int x, int y) {
-    return connector.scrollBy(x, y);
+    return callJsMethod('scrollBy', [x, y]);
   }
 
   /// Scrolls exactly to the position `(x, y)`
   @override
   Future<void> scrollTo(int x, int y) {
-    return connector.scrollTo(x, y);
+    return callJsMethod('scrollTo', [x, y]);
   }
 
   /// Retrieves the inner page title
   @override
   Future<String?> getTitle() {
-    return connector.getTitle();
+    return Future.value(connector["document"]["title"].toString());
   }
 
   /// Clears cache
   @override
   Future<void> clearCache() {
-    return connector.clearCache();
+    connector["localStorage"].callMethod("clear", []);
+    runRawJavascript(
+      'caches.keys().then((keyList) => Promise.all(keyList.map((key) => caches.delete(key))))',
+    );
+    return reload();
+  }
+
+  /// INTERNAL
+  /// WEB-ONLY
+  ///
+  /// This is called internally by the web.dart view class, to add a new
+  /// iframe navigation history entry.
+  ///
+  /// This, and all history-related stuff is needed because the history on web
+  /// is basically reimplemented by me from scratch using the [HistoryEntry] class.
+  /// This had to be done because I couldn't intercept iframe's navigation events and
+  /// current url.
+  void webRegisterNewHistoryEntry(CrossViewContent content) {
+    _history.addEntry(content);
   }
 
   /// INTERNAL

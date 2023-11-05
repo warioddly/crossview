@@ -39,16 +39,16 @@ class CssLoader {
   /// Builds the html page used when *ONLY ON WEB*, when the page is loading
   String build() {
     return '''
-<html>
-  <head>
-    <style>
-      $style
-    </style>
-</head>
-  <body>
-    <div class="$loaderClassName"></div>
-  </body>
-</html>
+      <html>
+        <head>
+          <style>
+            $style
+          </style>
+      </head>
+        <body>
+          <div class="$loaderClassName"></div>
+        </body>
+      </html>
     ''';
   }
 }
