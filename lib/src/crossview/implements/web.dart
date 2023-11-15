@@ -12,7 +12,7 @@ import 'package:crossview/src/utils/logger.dart';
 import 'package:crossview/src/utils/utils.dart';
 import 'package:crossview/src/controller/implements/web.dart';
 import 'package:http/http.dart' as http;
-// import 'package:crossview/src/utils/dart_ui_fix.dart' as ui;
+import 'package:crossview/src/utils/dart_ui_fix.dart' as ui;
 import 'package:crossview/src/controller/interface.dart' as ctrl_interface;
 import 'package:crossview/src/crossview/interface.dart' as view_interface;
 
@@ -145,7 +145,7 @@ class _WebViewXState extends State<CrossView> {
 
     iframeViewType = _createViewType();
     iframe = _createIFrame();
-    // _registerView(iframeViewType);
+    _registerView(iframeViewType);
 
     crossViewController = _createCrossViewController();
 
@@ -165,9 +165,9 @@ class _WebViewXState extends State<CrossView> {
   }
 
 
-  // void _registerView(String viewType) {
-  //   ui.platformViewRegistry.registerViewFactory(viewType, (int viewId) => iframe);
-  // }
+  void _registerView(String viewType) {
+    ui.platformViewRegistry.registerViewFactory(viewType, (int viewId) => iframe);
+  }
 
 
   CrossViewController _createCrossViewController() {
