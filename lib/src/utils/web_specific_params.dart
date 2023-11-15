@@ -1,5 +1,5 @@
 import 'package:crossview/src/utils/css_loader.dart';
-import 'package:crossview/src/utils/source_type.dart';
+
 import 'package:crossview/src/utils/utils.dart';
 
 /// Parameters specific to the web version.

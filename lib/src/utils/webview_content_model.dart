@@ -1,10 +1,11 @@
+
 import 'package:flutter/foundation.dart';
-import 'package:crossview/src/utils/source_type.dart';
+import 'enums.dart';
 
 /// Model class for webview's content
 ///
 /// This is the result of calling [await crossViewController.getContent()]
-class CrossViewContent {
+class WebViewContent {
   /// Source
   final String source;
 
@@ -18,20 +19,20 @@ class CrossViewContent {
   final Uint8List? body;
 
   /// Constructor
-  const CrossViewContent({
+  const WebViewContent({
     required this.source,
     required this.sourceType,
-    this.headers = const { },
+    this.headers = const {},
     this.body,
   });
 
-  CrossViewContent copyWith({
+  WebViewContent copyWith({
     String? source,
     SourceType? sourceType,
     Map<String, String>? headers,
     Uint8List? body,
   }) =>
-      CrossViewContent(
+      WebViewContent(
         source: source ?? this.source,
         sourceType: sourceType ?? this.sourceType,
         headers: headers ?? this.headers,
@@ -40,17 +41,17 @@ class CrossViewContent {
 
   @override
   String toString() {
-    return 'CrossViewContent:\n'
+    return 'WebViewContent:\n'
         'Source: $source\n'
         'SourceType: ${describeEnum(sourceType)}\n'
-        'Last request Headers: ${headers.isEmpty ? 'none' : headers}\n'
+        'Last request Headers: $headers\n'
         'Last request Body: ${body ?? 'none'}\n';
   }
 
   @override
   bool operator ==(Object other) =>
       identical(other, this) ||
-      (other is CrossViewContent &&
+      (other is WebViewContent &&
           other.source == source &&
           other.sourceType == sourceType &&
           other.headers == headers &&

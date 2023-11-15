@@ -1,5 +1,5 @@
 import 'dart:typed_data';
-import 'package:crossview/src/utils/source_type.dart';
+import 'package:crossview/src/utils/enums.dart';
 import 'package:crossview/src/utils/webview_content_model.dart';
 
 /// Interface for controller
@@ -42,7 +42,7 @@ abstract class CrossViewController<T> {
   Future<void> loadContent(
       String content,
       SourceType sourceType, {
-      Map<String, String> headers = const { },
+      Map<String, String> headers = const {},
       Uint8List? body,
       bool fromAssets = false,
   });
@@ -74,13 +74,13 @@ abstract class CrossViewController<T> {
   /// in the 'window' context, instead of doing it inside the corresponding iframe's 'window'
   ///
   /// For more info, check Mozilla documentation on 'window'
-  Future<dynamic> runRawJavascript(
+  Future<dynamic> runJavaScript(
     String rawJavascript, {
     bool inGlobalContext = false,
   });
 
   /// Returns the current content
-  Future<CrossViewContent> getContent();
+  Future<WebViewContent> getContent();
 
   /// Returns a Future that completes with the value true, if you can go
   /// back in the history stack.
@@ -119,5 +119,4 @@ abstract class CrossViewController<T> {
 
   /// Dispose resources
   void dispose();
-
 }

@@ -1,19 +1,17 @@
 import 'dart:async' show Future;
-// ignore: avoid_web_libraries_in_flutter
 import 'dart:js' as js;
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:crossview/src/utils/logger.dart';
-import 'package:crossview/src/utils/source_type.dart';
 import 'package:crossview/src/utils/utils.dart';
 import 'package:crossview/src/utils/web_history.dart';
-
 import 'package:crossview/src/controller/interface.dart' as i;
 
 /// Web implementation
-class CrossViewController extends ChangeNotifier implements i.CrossViewController<js.JsObject> {
+class CrossViewController extends ChangeNotifier
+    implements i.CrossViewController<js.JsObject> {
   /// JsObject connector
   @override
   late js.JsObject connector;
@@ -23,10 +21,10 @@ class CrossViewController extends ChangeNotifier implements i.CrossViewControlle
 
   // Stack-based custom history
   // First entry is the current url, last entry is the initial url
-  final HistoryStack<CrossViewContent> _history;
+  final HistoryStack<WebViewContent> _history;
 
   /// INTERNAL
-  CrossViewContent get value => _history.currentEntry;
+  WebViewContent get value => _history.currentEntry;
 
   /// Constructor
   CrossViewController({
@@ -34,8 +32,8 @@ class CrossViewController extends ChangeNotifier implements i.CrossViewControlle
     required SourceType initialSourceType,
     required bool ignoreAllGestures,
   })  : _ignoreAllGesturesNotifier = ValueNotifier(ignoreAllGestures),
-        _history = HistoryStack<CrossViewContent>(
-          initialEntry: CrossViewContent(
+        _history = HistoryStack<WebViewContent>(
+          initialEntry: WebViewContent(
             source: initialContent,
             sourceType: initialSourceType,
           ),
@@ -86,20 +84,19 @@ class CrossViewController extends ChangeNotifier implements i.CrossViewControlle
     Uint8List? body,
     bool fromAssets = false,
   }) async {
-    CrossViewContent newContent;
+    WebViewContent newContent;
 
     if (fromAssets) {
-
       final contentFromAssets = await rootBundle.loadString(content);
 
-      newContent = CrossViewContent(
+      newContent = WebViewContent(
         source: contentFromAssets,
         sourceType: sourceType,
         headers: headers,
         body: body,
       );
     } else {
-      newContent = CrossViewContent(
+      newContent = WebViewContent(
         source: content,
         sourceType: sourceType,
         headers: headers,
@@ -108,7 +105,7 @@ class CrossViewController extends ChangeNotifier implements i.CrossViewControlle
     }
 
     webRegisterNewHistoryEntry(newContent);
-    _notifyWidget();
+    notifyListeners();
   }
 
   /// This function allows you to call Javascript functions defined inside the webview.
@@ -143,7 +140,7 @@ class CrossViewController extends ChangeNotifier implements i.CrossViewControlle
   ///
   /// For more info, check Mozilla documentation on 'window'
   @override
-  Future<dynamic> runRawJavascript(
+  Future<dynamic> runJavaScript(
     String rawJavascript, {
     bool inGlobalContext = false,
   }) {
@@ -156,7 +153,7 @@ class CrossViewController extends ChangeNotifier implements i.CrossViewControlle
 
   /// Returns the current content
   @override
-  Future<CrossViewContent> getContent() {
+  Future<WebViewContent> getContent() {
     return Future.value(value);
   }
 
@@ -173,7 +170,7 @@ class CrossViewController extends ChangeNotifier implements i.CrossViewControlle
     _history.moveBack();
     log('Current history: ${_history.toString()}');
 
-    _notifyWidget();
+    notifyListeners();
   }
 
   /// Returns a Future that completes with the value true, if you can go
@@ -189,13 +186,13 @@ class CrossViewController extends ChangeNotifier implements i.CrossViewControlle
     _history.moveForward();
     log('Current history: ${_history.toString()}');
 
-    _notifyWidget();
+    notifyListeners();
   }
 
   /// Reload the current content.
   @override
   Future<void> reload() async {
-    _notifyWidget();
+    notifyListeners();
   }
 
   /// Get scroll position on X axis
@@ -232,9 +229,7 @@ class CrossViewController extends ChangeNotifier implements i.CrossViewControlle
   @override
   Future<void> clearCache() {
     connector["localStorage"].callMethod("clear", []);
-    runRawJavascript(
-      'caches.keys().then((keyList) => Promise.all(keyList.map((key) => caches.delete(key))))',
-    );
+    runJavaScript('caches.keys().then((keyList) => Promise.all(keyList.map((key) => caches.delete(key))))');
     return reload();
   }
 
@@ -248,7 +243,7 @@ class CrossViewController extends ChangeNotifier implements i.CrossViewControlle
   /// is basically reimplemented by me from scratch using the [HistoryEntry] class.
   /// This had to be done because I couldn't intercept iframe's navigation events and
   /// current url.
-  void webRegisterNewHistoryEntry(CrossViewContent content) {
+  void webRegisterNewHistoryEntry(WebViewContent content) {
     _history.addEntry(content);
   }
 
@@ -262,9 +257,6 @@ class CrossViewController extends ChangeNotifier implements i.CrossViewControlle
     _ignoreAllGesturesNotifier.removeListener(cb);
   }
 
-  void _notifyWidget() {
-    notifyListeners();
-  }
 
   /// Dispose resources
   @override
@@ -272,4 +264,6 @@ class CrossViewController extends ChangeNotifier implements i.CrossViewControlle
     _ignoreAllGesturesNotifier.dispose();
     super.dispose();
   }
+
+
 }

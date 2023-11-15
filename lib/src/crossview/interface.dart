@@ -1,11 +1,11 @@
+
 import 'package:crossview/src/utils/utils.dart';
 import 'package:crossview/src/controller/interface.dart';
-import 'package:webview_flutter/webview_flutter.dart' as wf;
-
+import 'package:webview_flutter/webview_flutter.dart';
 
 /// Interface for widget
 abstract class CrossView {
-
+  
   /// Initial content
   final String initialContent;
 
@@ -21,10 +21,11 @@ abstract class CrossView {
   final String? userAgent;
 
 
-  /// Callback which returns a referrence to the [ICrossViewController]
+  /// Callback which returns a referrence to the [IWebViewXController]
   /// being created.
-  final Function(CrossViewController controller)? onCreated;
+  final Function(CrossViewController controller)? onViewCreated;
 
+  
   /// A set of [EmbeddedJsContent].
   ///
   /// You can define JS functions, which will be embedded into
@@ -34,23 +35,20 @@ abstract class CrossView {
   /// For more info, see [EmbeddedJsContent].
   final Set<EmbeddedJsContent> jsContent;
 
-  /// A set of [DartCallback].
-  ///
-  /// You can define Dart functions, which can be called from the JS side.
-  ///
-  /// For more info, see [DartCallback].
-  final Set<DartCallback> dartCallBacks;
 
   /// Boolean value to specify if should ignore all gestures that touch the webview.
   ///
   /// You can change this later from the controller.
   final bool ignoreAllGestures;
+  
+  
+  /// Callback for when the page starts loading.
+  final NavigationDelegate? navigationDelegate;
 
-  /// Boolean value to specify if Javascript execution should be allowed inside the webview
-  final wf.JavaScriptMode javascriptMode;
 
-  /// Callback to decide whether to allow navigation to the incoming url
-  final wf.NavigationDelegate? navigationDelegate;
+  /// This defines if Javascript execution should be allowed inside the webview
+  final JavaScriptMode javascriptMode;
+
 
   /// Parameters specific to the web version.
   /// This may eventually be merged with [mobileSpecificParams],
@@ -62,20 +60,19 @@ abstract class CrossView {
   /// if all features become cross platform.
   final MobileSpecificParams mobileSpecificParams;
 
-
+  
   /// Constructor
   const CrossView({
     this.initialContent = 'about:blank',
     this.initialSourceType = SourceType.url,
+    this.javascriptMode = JavaScriptMode.unrestricted,
     this.userAgent,
-    this.onCreated,
-    this.jsContent = const {},
-    this.dartCallBacks = const {},
-    this.ignoreAllGestures = false,
-    this.javascriptMode = wf.JavaScriptMode.unrestricted,
+    this.onViewCreated,
     this.navigationDelegate,
+    this.jsContent = const {},
+    this.ignoreAllGestures = false,
     this.webSpecificParams = const WebSpecificParams(),
     this.mobileSpecificParams = const MobileSpecificParams(),
   });
-
+  
 }

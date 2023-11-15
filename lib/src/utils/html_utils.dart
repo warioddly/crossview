@@ -5,13 +5,9 @@ import 'package:uuid/uuid.dart';
 import 'package:crossview/src/utils/constants.dart';
 import 'package:crossview/src/utils/embedded_js_content.dart';
 
-/// Specifies where to embed ("burn") the javascript inside the HTML source
-enum EmbedPosition {
-  belowBodyOpenTag,
-  aboveBodyCloseTag,
-  belowHeadOpenTag,
-  aboveHeadCloseTag,
-}
+import 'enums.dart';
+
+
 
 /// HTML utils: wrappers, parsers, splitters etc.
 class HtmlUtils {

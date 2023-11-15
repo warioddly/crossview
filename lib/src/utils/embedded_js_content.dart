@@ -58,6 +58,7 @@
 /// ),
 /// ```
 class EmbeddedJsContent {
+
   /// This param should be used when the JS you wish to define
   /// doesn't interact in any way with the Dart side
   final String? js;

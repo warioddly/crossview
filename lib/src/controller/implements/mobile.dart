@@ -1,17 +1,17 @@
 import 'dart:async' show Future;
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show Uint8List, rootBundle;
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:webview_flutter/webview_flutter.dart' as wf;
 import 'package:crossview/src/utils/html_utils.dart';
-import 'package:crossview/src/utils/source_type.dart';
+
 import 'package:crossview/src/utils/utils.dart';
 
 import 'package:crossview/src/controller/interface.dart' as i;
 
 /// Mobile implementation
-class CrossViewController extends ChangeNotifier
-    implements i.CrossViewController<wf.WebViewController> {
+class CrossViewController extends ChangeNotifier implements i.CrossViewController<wf.WebViewController> {
   /// Webview controller connector
   @override
   late wf.WebViewController connector;
@@ -21,7 +21,7 @@ class CrossViewController extends ChangeNotifier
 
   /// INTERNAL
   /// Used to tell the last used [SourceType] and last headers.
-  late CrossViewContent value;
+  late WebViewContent value;
 
   /// Constructor
   CrossViewController({
@@ -29,7 +29,7 @@ class CrossViewController extends ChangeNotifier
     required SourceType initialSourceType,
     required bool ignoreAllGestures,
   })  : _ignoreAllGesturesNotifier = ValueNotifier(ignoreAllGestures),
-        value = CrossViewContent(
+        value = WebViewContent(
           source: initialContent,
           sourceType: initialSourceType,
         );
@@ -73,30 +73,29 @@ class CrossViewController extends ChangeNotifier
   ///
   @override
   Future<void> loadContent(
-      String content,
-      SourceType sourceType, {
-      Map<String, String> headers = const {},
-      Uint8List? body,
-      bool fromAssets = false,
+    String content,
+    SourceType sourceType, {
+    Map<String, String> headers = const {},
+    Uint8List? body,
+    bool fromAssets = false,
   }) async {
+
     if (fromAssets) {
-
-      final contentFromAssets = await rootBundle.loadString(content);
-
-      value = CrossViewContent(
-        source: contentFromAssets,
+      final _content = await rootBundle.loadString(content);
+      value = WebViewContent(
+        source: _content,
         sourceType: sourceType,
         headers: headers,
       );
     } else {
-      value = CrossViewContent(
+      value = WebViewContent(
         source: content,
         sourceType: sourceType,
         headers: headers,
       );
     }
 
-    _notifyWidget();
+    notifyListeners();
   }
 
   /// This function allows you to call Javascript functions defined inside the webview.
@@ -116,13 +115,10 @@ class CrossViewController extends ChangeNotifier
   /// ```
   //TODO This should return an error if the operation failed, but it doesn't
   @override
-  Future<dynamic> callJsMethod(
-    String name,
-    List<dynamic> params,
-  ) async {
+  Future<dynamic> callJsMethod(String name, List<dynamic> params) async {
     // This basically will transform a "raw" call (evaluateJavascript)
     // into a little bit more "typed" call, that is - calling a method.
-    final result = await connector.runJavaScriptReturningResult(
+    final Object result = await connector.runJavaScriptReturningResult(
       HtmlUtils.buildJsFunction(name, params),
     );
 
@@ -130,7 +126,8 @@ class CrossViewController extends ChangeNotifier
     //
     // In the mobile version responses from Js to Dart come wrapped in single quotes (')
     // The web works fine because it is already into it's native environment
-    return HtmlUtils.unQuoteJsResponseIfNeeded(result.toString());
+    return result;
+    // return HtmlUtils.unQuoteJsResponseIfNeeded(result);
   }
 
   /// This function allows you to evaluate 'raw' javascript (e.g: 2+2)
@@ -141,16 +138,13 @@ class CrossViewController extends ChangeNotifier
   ///
   /// For more info, check Mozilla documentation on 'window'
   @override
-  Future<dynamic> runRawJavascript(
-    String rawJavascript, {
-    bool inGlobalContext = false, // NO-OP HERE
-  }) {
+  Future<dynamic> runJavaScript(String rawJavascript, { bool inGlobalContext = false }) {
     return connector.runJavaScript(rawJavascript);
   }
 
   /// Returns the current content
   @override
-  Future<CrossViewContent> getContent() async {
+  Future<WebViewContent> getContent() async {
     var currentContent = await connector.currentUrl();
     var currentSourceType = value.sourceType;
 
@@ -252,9 +246,6 @@ class CrossViewController extends ChangeNotifier
     _ignoreAllGesturesNotifier.removeListener(cb);
   }
 
-  void _notifyWidget() {
-    notifyListeners();
-  }
 
   /// Dispose resources
   @override

@@ -1,12 +1,14 @@
+
 import 'package:flutter/material.dart';
 import 'package:crossview/src/utils/utils.dart';
-import 'package:crossview/src/controller/interface.dart' as ctrl_interface;
 import 'package:crossview/src/crossview/interface.dart' as view_interface;
-import 'package:webview_flutter/webview_flutter.dart' as wf;
+import 'package:crossview/src/controller/interface.dart' as ctrl_interface;
+import 'package:webview_flutter/webview_flutter.dart';
+
+
 
 /// Facade class
 class CrossView extends StatelessWidget implements view_interface.CrossView {
-
 
   /// Initial content
   @override
@@ -25,10 +27,12 @@ class CrossView extends StatelessWidget implements view_interface.CrossView {
   @override
   final String? userAgent;
 
-  /// Callback which returns a referrence to the [CrossViewController]
+
+  /// Callback which returns a referrence to the [IWebViewXController]
   /// being created.
   @override
-  final Function(ctrl_interface.CrossViewController controller)? onCreated;
+  final Function(ctrl_interface.CrossViewController controller)? onViewCreated;
+
 
   /// A set of [EmbeddedJsContent].
   ///
@@ -40,13 +44,6 @@ class CrossView extends StatelessWidget implements view_interface.CrossView {
   @override
   final Set<EmbeddedJsContent> jsContent;
 
-  /// A set of [DartCallback].
-  ///
-  /// You can define Dart functions, which can be called from the JS side.
-  ///
-  /// For more info, see [DartCallback].
-  @override
-  final Set<DartCallback> dartCallBacks;
 
   /// Boolean value to specify if should ignore all gestures that touch the webview.
   ///
@@ -54,13 +51,16 @@ class CrossView extends StatelessWidget implements view_interface.CrossView {
   @override
   final bool ignoreAllGestures;
 
-  /// Boolean value to specify if Javascript execution should be allowed inside the webview
-  @override
-  final wf.JavaScriptMode javascriptMode;
 
-  /// Callback to decide whether to allow navigation to the incoming url
+  /// Callback for when the page starts loading.
   @override
-  final wf.NavigationDelegate? navigationDelegate;
+  final NavigationDelegate? navigationDelegate;
+
+
+  /// This defines if Javascript execution should be allowed inside the webview
+  @override
+  final JavaScriptMode javascriptMode;
+
 
   /// Parameters specific to the web version.
   /// This may eventually be merged with [mobileSpecificParams],
@@ -74,17 +74,17 @@ class CrossView extends StatelessWidget implements view_interface.CrossView {
   @override
   final MobileSpecificParams mobileSpecificParams;
 
+
   /// Constructor
   const CrossView({
     Key? key,
     this.initialContent = 'about:blank',
     this.initialSourceType = SourceType.url,
+    this.javascriptMode = JavaScriptMode.unrestricted,
     this.userAgent,
-    this.onCreated,
+    this.onViewCreated,
     this.jsContent = const {},
-    this.dartCallBacks = const {},
     this.ignoreAllGestures = false,
-    this.javascriptMode = wf.JavaScriptMode.unrestricted,
     this.navigationDelegate,
     this.webSpecificParams = const WebSpecificParams(),
     this.mobileSpecificParams = const MobileSpecificParams(),
@@ -94,6 +94,5 @@ class CrossView extends StatelessWidget implements view_interface.CrossView {
   Widget build(BuildContext context) {
     throw UnimplementedError('Cannot call build on the facade implementation of CrossView.');
   }
-
 
 }
