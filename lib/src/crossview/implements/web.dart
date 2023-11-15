@@ -315,8 +315,8 @@ class _WebViewXState extends State<CrossView> {
       ..id = 'id_$iframeViewType'
       ..name = 'name_$iframeViewType'
       ..style.border = 'none'
-      ..width = '100%'
-      ..height = '100%'
+      // ..width = '100%'
+      // ..height = '100%'
       ..allowFullscreen = widget.webSpecificParams.webAllowFullscreenContent;
 
 
