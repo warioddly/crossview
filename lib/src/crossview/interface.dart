@@ -21,7 +21,7 @@ abstract class CrossView {
   final String? userAgent;
 
 
-  /// Callback which returns a referrence to the [IWebViewXController]
+  /// Callback which returns a referrence to the [CrossViewController]
   /// being created.
   final Function(CrossViewController controller)? onViewCreated;
 

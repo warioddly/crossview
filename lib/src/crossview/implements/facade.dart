@@ -28,7 +28,7 @@ class CrossView extends StatelessWidget implements view_interface.CrossView {
   final String? userAgent;
 
 
-  /// Callback which returns a referrence to the [IWebViewXController]
+  /// Callback which returns a referrence to the [CrossViewController]
   /// being created.
   @override
   final Function(ctrl_interface.CrossViewController controller)? onViewCreated;

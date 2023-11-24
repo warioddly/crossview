@@ -1,6 +1,6 @@
 # crossview
 
-A new Flutter project.
+CrossView - Flutter plugin for displaying web content in a native view on Android, iOS, macOS, Linux and Windows.
 
 ## Getting Started
 
